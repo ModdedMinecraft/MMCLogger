@@ -12,13 +12,15 @@ import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
-import org.spongepowered.api.event.message.MessageEvent;
+import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.Scheduler;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.serializer.TextSerializers;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -29,7 +31,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Plugin(id = "mmclogger", name = "MMCLogger", version = "1.0")
@@ -50,15 +51,15 @@ public class Main {
     private HoconConfigurationLoader loader;
     private ConfigurationNode rootNode;
 
-    public File chatlogFolder = new File(configDir, "config/mmclogger/logs");
-    public File commandlogFolder = new File(configDir, "config/mmclogger/commandlogs");
-    public File playersFolder = new File(configDir, "config/mmclogger/players");
+    public File chatlogFolder = new File(configDir, "chatlogs/logs");
+    public File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
+    public File playersFolder = new File(configDir, "chatlogs/players");
 
-    public File logFolder = new File(chatlogFolder, getFileDate());
-    public File clogFolder = new File(commandlogFolder, getFileDate());
+    public File logFolder = new File(chatlogFolder, getFolderDate());
+    public File clogFolder = new File(commandlogFolder, getFolderDate());
 
-    public File notifyChatFile = new File(configDir, "config/mmclogger/notifyChat.log");
-    public File notifyCommandFile = new File(configDir, "config/mmclogger/notifyCommands.log");
+    public File notifyChatFile = new File(configDir, "chatlogs/notifyChat.log");
+    public File notifyCommandFile = new File(configDir, "chatlogs/notifyCommands.log");
 
     Scheduler scheduler = Sponge.getScheduler();
     Task.Builder taskBuilder = scheduler.createTaskBuilder();
@@ -70,19 +71,19 @@ public class Main {
         rootNode = loader.load();
 
         if (!chatlogFolder.isDirectory()) {
-            chatlogFolder.mkdir();
+            chatlogFolder.mkdirs();
         }
         if (!commandlogFolder.isDirectory()) {
-            commandlogFolder.mkdir();
+            commandlogFolder.mkdirs();
         }
         if (!playersFolder.isDirectory()) {
-            playersFolder.mkdir();
+            playersFolder.mkdirs();
         }
         if (!clogFolder.isDirectory()) {
-            clogFolder.mkdir();
+            clogFolder.mkdirs();
         }
         if (!logFolder.isDirectory()) {
-            logFolder.mkdir();
+            logFolder.mkdirs();
         }
 
         configCheck();
@@ -101,56 +102,47 @@ public class Main {
     }
 
     @Listener
-    public void onPlayerChat(MessageEvent event) throws IOException
+    public void onPlayerChat(MessageChannelEvent.Chat event, @Root Player p) throws IOException
     {
-        Optional<Player> optionalPlayer = event.getCause().first(Player.class);
-        if (optionalPlayer.isPresent()) {
-            Player player = optionalPlayer.get();
-            String name = player.getName();
-            String message = event.getMessage().toString();
-            Location<World> location = player.getLocation();
-            int xLocation = (int) location.getX();
-            int yLocation = (int) location.getY();
-            int zLocation = (int) location.getZ();
-            String world = location.getExtent().getName();
-            String date = getDate();
-            checkPlayer(name);
+        Player player = p;
+        String name = player.getName();
+        String message = TextSerializers.FORMATTING_CODE.serialize(event.getFormatter().getBody().toText());
+        Location<World> location = player.getLocation();
+        int xLocation = (int) location.getX();
+        int yLocation = (int) location.getY();
+        int zLocation = (int) location.getZ();
+        String world = location.getExtent().getName();
+        String date = getDate();
+        checkPlayer(name);
 
-            processInformation(player, name, message, xLocation, yLocation, zLocation, world, date);
-        }
+        processInformation(player, name, message, xLocation, yLocation, zLocation, world, date);
     }
 
-    public void processInformation(Player player, String playerName, String content, int x, int y, int z, String worldName, String date) throws IOException {
-        boolean globalChat = rootNode.getNode("Log", "Toggle", "Chat").getBoolean();
+    public void processInformation(Player player, String playerName, String chat, int x, int y, int z, String worldName, String date) throws IOException {
+        boolean globalChat = rootNode.getNode("Log", "Toggle", "GlobalChat").getBoolean();
         boolean playerChat = rootNode.getNode("Log", "Toggle", "PlayerChat").getBoolean();
         boolean logNotifyChat = rootNode.getNode("Log", "Toggle", "LogNotifyChat").getBoolean();
         boolean inGameNotifications = rootNode.getNode("Log", "Toggle", "InGameNotifications").getBoolean();
 
         File playerFile = new File(playersFolder, playerName + ".log");
+        String message = chat.replaceAll("(&([a-f0-9]))", "");
 
-        taskBuilder.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (globalChat) {
-                        new WriteFile(formatLog(playerName, content, x, y, z, worldName, date), getChatFile());
-                    }
-                    if (playerChat) {
-                        new WriteFile(formatLog(playerName, content, x, y, z, worldName, date), playerFile);
-                    }
-                    if ((checkNotifyList(content)) && (logNotifyChat)) {
-                        new WriteFile(formatLog(playerName, content, x, y, z, worldName, date), notifyChatFile);
-                    }
-                    if ((checkNotifyList(content)) && (inGameNotifications)) {
-                        notifyPlayer(TextColors.BLUE + "[" + TextColors.GOLD + "MMCLogger" + TextColors.BLUE + "] " + TextColors.GOLD + playerName + ": " + TextColors.WHITE + content);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ObjectMappingException e) {
-                    e.printStackTrace();
-                }
+        try {
+            if (globalChat) {
+                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), getChatFile())).async().name("Global Chat Log").submit(this);
             }
-        }).async().name("Log Chat").submit(this);
+            if (playerChat) {
+                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), playerFile)).async().name("Player Chat Log").submit(this);
+            }
+            if ((checkNotifyList(message)) && (logNotifyChat)) {
+                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), notifyChatFile)).async().name("Notify Chat Log").submit(this);
+            }
+            if ((checkNotifyList(message)) && (inGameNotifications)) {
+                notifyPlayer(TextColors.BLUE + "[" + TextColors.GOLD + "MMCLogger" + TextColors.BLUE + "] " + TextColors.GOLD + playerName + ": " + TextColors.WHITE + message);
+            }
+        } catch (ObjectMappingException e) {
+            e.printStackTrace();
+        }
     }
 
     public void checkPlayer(String name) throws IOException
@@ -195,8 +187,15 @@ public class Main {
         return dateFormat.format(date);
     }
 
-    public static String getFileDate() {
+    public static String getFolderDate() {
         DateFormat dateFormat = new SimpleDateFormat("MMMMMMMMM");
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
+
+    public static String getFileDate()
+    {
+        DateFormat dateFormat = new SimpleDateFormat("MMM-dd-yyyy");
         Date date = new Date();
         return dateFormat.format(date);
     }
