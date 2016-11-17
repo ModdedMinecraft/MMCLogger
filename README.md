@@ -19,6 +19,46 @@
 - Sort command logs by month / date ?
 - ????
 
+# Config
+
+Log {
+    CommandLog {
+        Blacklist=[
+            help,
+            who,
+            home
+        ]
+    }
+    LogFormat="[%date] %name: %content"
+    Notifications {
+        Chat=[
+            ddos,
+            hack,
+            flymod,
+            dupe,
+            duplicate,
+            duplication
+        ]
+        Commands=[
+            item,
+            give,
+            sponge,
+            op
+        ]
+    }
+    Toggle {
+        GlobalChat=true
+        GlobalCommands=true
+        GlobalLogin=true
+        InGameNotifications=true
+        LogNotifyChat=true
+        LogNotifyCommands=true
+        PlayerChat=true
+        PlayerCommands=true
+        PlayerLogin=true
+    }
+}
+
 # Credits
 -Based from the same idea of CCLogger(Bukkit) by Alrik94
 
