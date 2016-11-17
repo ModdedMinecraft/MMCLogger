@@ -7,22 +7,15 @@ import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandManager;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
-import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.Scheduler;
 import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.serializer.TextSerializers;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class Main {
 
     @Inject
-    public Logger logger;
-    private CommandManager cmdManager = Sponge.getCommandManager();
+    private Logger logger;
 
     @Inject
     @ConfigDir(sharedRoot = false)
@@ -49,24 +41,26 @@ public class Main {
     private File defaultConf;
 
     private HoconConfigurationLoader loader;
-    private ConfigurationNode rootNode;
+    public ConfigurationNode rootNode;
 
-    public File chatlogFolder = new File(configDir, "chatlogs/logs");
-    public File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
+    private File chatlogFolder = new File(configDir, "chatlogs/logs");
+    private File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
     public File playersFolder = new File(configDir, "chatlogs/players");
 
-    public File logFolder = new File(chatlogFolder, getFolderDate());
-    public File clogFolder = new File(commandlogFolder, getFolderDate());
+    private File logFolder = new File(chatlogFolder, getFolderDate());
+    private File clogFolder = new File(commandlogFolder, getFolderDate());
 
     public File notifyChatFile = new File(configDir, "chatlogs/notifyChat.log");
     public File notifyCommandFile = new File(configDir, "chatlogs/notifyCommands.log");
 
-    Scheduler scheduler = Sponge.getScheduler();
-    Task.Builder taskBuilder = scheduler.createTaskBuilder();
+    private Scheduler scheduler = Sponge.getScheduler();
+    public Task.Builder taskBuilder = scheduler.createTaskBuilder();
 
     @Listener
     public void onInitialization(GameInitializationEvent e) throws ObjectMappingException, IOException {
         loader = HoconConfigurationLoader.builder().setFile(defaultConf).build();
+
+        Sponge.getEventManager().registerListeners(this, new EventListener(this));
 
         rootNode = loader.load();
 
@@ -101,24 +95,7 @@ public class Main {
         logger.info("MMCLogger Loaded");
     }
 
-    @Listener
-    public void onPlayerChat(MessageChannelEvent.Chat event, @Root Player p) throws IOException
-    {
-        Player player = p;
-        String name = player.getName();
-        String message = TextSerializers.FORMATTING_CODE.serialize(event.getFormatter().getBody().toText());
-        Location<World> location = player.getLocation();
-        int xLocation = (int) location.getX();
-        int yLocation = (int) location.getY();
-        int zLocation = (int) location.getZ();
-        String world = location.getExtent().getName();
-        String date = getDate();
-        checkPlayer(name);
-
-        processInformation(player, name, message, xLocation, yLocation, zLocation, world, date);
-    }
-
-    public void processInformation(Player player, String playerName, String chat, int x, int y, int z, String worldName, String date) throws IOException {
+    void processInformation(Player player, String playerName, String chat, int x, int y, int z, String worldName, String date) {
         boolean globalChat = rootNode.getNode("Log", "Toggle", "GlobalChat").getBoolean();
         boolean playerChat = rootNode.getNode("Log", "Toggle", "PlayerChat").getBoolean();
         boolean logNotifyChat = rootNode.getNode("Log", "Toggle", "LogNotifyChat").getBoolean();
@@ -134,28 +111,62 @@ public class Main {
             if (playerChat) {
                 Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), playerFile)).async().name("Player Chat Log").submit(this);
             }
-            if ((checkNotifyList(message)) && (logNotifyChat)) {
+            if ((checkNotifyListPlayer(message)) && (logNotifyChat)) {
                 Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), notifyChatFile)).async().name("Notify Chat Log").submit(this);
             }
-            if ((checkNotifyList(message)) && (inGameNotifications)) {
-                notifyPlayer(TextColors.BLUE + "[" + TextColors.GOLD + "MMCLogger" + TextColors.BLUE + "] " + TextColors.GOLD + playerName + ": " + TextColors.WHITE + message);
+            if ((checkNotifyListPlayer(message)) && (inGameNotifications)) {
+                notifyPlayer("&9[&6MMCLogger&9] &6" + playerName + "&f: " + message);
             }
         } catch (ObjectMappingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void checkPlayer(String name) throws IOException
-    {
-        File file = new File(playersFolder, name + ".log");
-        if (!file.exists()) {
-            file.createNewFile();
+    void processCMDInformation(Player player, String playerName, String command, int x, int y, int z, String worldName, String date) {
+
+        boolean playerCommand = rootNode.getNode("Log", "Toggle", "PlayerCommands").getBoolean();
+        boolean globalCommand = rootNode.getNode("Log", "Toggle", "GlobalCommands").getBoolean();
+        boolean logNotifyCommands = rootNode.getNode("Log", "Toggle", "LogNotifyCommands").getBoolean();
+        boolean inGameNotifications = rootNode.getNode("Log", "Toggle", "InGameNotifications").getBoolean();
+
+        File playerFile = new File(playersFolder, playerName + ".log");
+
+        try {
+            if ((globalCommand) && (!commandCheck(command))) {
+                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, command, x, y, z, worldName, date), getCmdFile())).async().name("Global Command Log").submit(this);
+            }
+            if ((playerCommand) && (!commandCheck(command))) {
+                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, command, x, y, z, worldName, date), playerFile)).async().name("Player Command Log").submit(this);
+            }
+            if ((checkNotifyListCMD(command)) && (logNotifyCommands)) {
+                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, command, x, y, z, worldName, date), notifyCommandFile)).async().name("Notify Command Log").submit(this);
+            }
+            if ((checkNotifyListCMD(command)) && (inGameNotifications)) {
+                notifyPlayer("&9[&6MMCLogger&9] &6" + playerName + "&f: " + command);
+            }
+        } catch (ObjectMappingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public String[] formatLog(String playerName, String command, int x, int y, int z, String worldName, String date) throws IOException {
-        String format = rootNode.getNode("Log", "LogFormat").getString();
-        String log = format;
+    public boolean commandCheck(String command) throws ObjectMappingException {
+        List commands = rootNode.getNode("Log", "CommandLog", "Blacklist").getList(TypeToken.of(String.class));
+        String[] commandsplit = command.split(" ");
+        String commandconvert = commandsplit[0];
+        for (int i = 0; i < commands.size(); i++) {
+            if (commandconvert.matches((String)commands.get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String[] formatLog(String playerName, String command, int x, int y, int z, String worldName, String date) throws IOException {
+        String log = rootNode.getNode("Log", "LogFormat").getString();
         if (log.contains("%date")) {
             log = log.replaceAll("%date", date);
         }
@@ -178,7 +189,15 @@ public class Main {
             log = log.replaceAll("%content", java.util.regex.Matcher.quoteReplacement(command));
         }
 
-        return new String[]{ log };
+        return new String[]{log};
+    }
+
+    public void checkPlayer(String name) throws IOException
+    {
+        File file = new File(playersFolder, name + ".log");
+        if (!file.exists()) {
+            file.createNewFile();
+        }
     }
 
     public String getDate() {
@@ -187,13 +206,13 @@ public class Main {
         return dateFormat.format(date);
     }
 
-    public static String getFolderDate() {
+    private static String getFolderDate() {
         DateFormat dateFormat = new SimpleDateFormat("MMMMMMMMM");
         Date date = new Date();
         return dateFormat.format(date);
     }
 
-    public static String getFileDate()
+    private static String getFileDate()
     {
         DateFormat dateFormat = new SimpleDateFormat("MMM-dd-yyyy");
         Date date = new Date();
@@ -201,16 +220,14 @@ public class Main {
     }
 
     public File getChatFile() {
-        File chatFile = new File(logFolder, getFileDate() + "-chat.log");
-        return chatFile;
+        return new File(logFolder, getFileDate() + "-chat.log");
     }
 
     public File getCmdFile() {
-        File commandFile = new File(clogFolder, getFileDate() + "-cmd.log");
-        return commandFile;
+        return new File(clogFolder, getFileDate() + "-cmd.log");
     }
 
-    public boolean checkNotifyList(String message) throws IOException, ObjectMappingException {
+    public boolean checkNotifyListPlayer(String message) throws ObjectMappingException  {
         List messageList = rootNode.getNode("Log", "Notifications", "Chat").getList(TypeToken.of(String.class));
         for (int i = 0; i < messageList.size(); i++) {
             if (message.toLowerCase().contains((CharSequence)messageList.get(i))) {
@@ -220,7 +237,19 @@ public class Main {
         return false;
     }
 
-    public void checkDate() {
+    public boolean checkNotifyListCMD(String command) throws ObjectMappingException {
+        List commands = rootNode.getNode("Log", "Notifications", "Commands").getList(TypeToken.of(String.class));
+        String[] commandsplit = command.split(" ");
+        String commandconvert = commandsplit[0];
+        for (int i = 0; i < commands.size(); i++) {
+            if (commandconvert.matches((String)commands.get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void checkDate() {
         Date now = new Date();
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
     }
@@ -233,29 +262,24 @@ public class Main {
         }
     }
 
-    public void configCheck()
+    private void configCheck()
     {
         String[] blacklist = {
-                "/help",
-                "/who",
-                "/home" };
+                "help",
+                "who",
+                "home" };
         String[] commandNotifyList = {
-                "/pl",
-                "/item",
-                "/give",
-                "/plugins",
-                "/version",
-                "/ver",
-                "/op" };
+                "item",
+                "give",
+                "sponge",
+                "op" };
         String[] chatNotifyList = {
                 "ddos",
                 "hack",
                 "flymod",
                 "dupe",
                 "duplicate",
-                "duplication",
-                "homo",
-                "faggot" };
+                "duplication" };
 
         try {
             if (!defaultConf.exists()) {
@@ -269,7 +293,7 @@ public class Main {
                 rootNode.getNode("Log", "Toggle", "LogNotifyCommands").setValue(true);
                 rootNode.getNode("Log", "Toggle", "PlayerLogin").setValue(true);
                 rootNode.getNode("Log", "Toggle", "GlobalLogin").setValue(true);
-                rootNode.getNode("Log", "Commands", "Blacklist").setValue(Arrays.asList(blacklist));
+                rootNode.getNode("Log", "CommandLog", "Blacklist").setValue(Arrays.asList(blacklist));
                 rootNode.getNode("Log", "LogFormat").setValue("[%date] %name: %content");
                 rootNode.getNode("Log", "Notifications", "Chat").setValue(Arrays.asList(chatNotifyList));
                 rootNode.getNode("Log", "Notifications", "Commands").setValue(Arrays.asList(commandNotifyList));

@@ -7,6 +7,13 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.serializer.TextSerializers;
 
 public class Util {
+
+    private Main instance;
+
+    public Util(Main instance) {
+        this.instance = instance;
+    }
+
     public static void broadcastMessage(String message) {
         Sponge.getServer().getBroadcastChannel().send(processColours(message), ChatTypes.SYSTEM);
     }
@@ -15,11 +22,12 @@ public class Util {
         sender.sendMessage(processColours(message));
     }
 
-    public static Text processColours(String str) {
+    private static Text processColours(String str) {
         return fromLegacy('&', str);
     }
 
-    public static Text fromLegacy(char legacyChar, String legacy) {
+    private static Text fromLegacy(char legacyChar, String legacy) {
         return TextSerializers.formattingCode(legacyChar).deserializeUnchecked(legacy);
     }
+
 }
