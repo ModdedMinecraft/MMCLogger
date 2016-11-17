@@ -17,7 +17,7 @@
 - Customizable folder location
 - Log connections / disconections
 - Sort command logs by month / date ?
-- ????
+- ???? 
 
 # Config
 
