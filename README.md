@@ -5,7 +5,7 @@
 - Log all commands
 - Log each player's indavidual chat history seperatly (Optional)
 - Customizable file format
-- Notification in-game and logged to a file for blacklisted commands & buzz words
+- Notification in-game and logged to a file for notification commands & buzz words
 
 # Permissions
 - mmclogger.notify - Notifies the user of the buzz words defined in the config file.
