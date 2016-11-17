@@ -40,7 +40,7 @@ public class EventListener {
 
     @Listener
     public void onPlayerCommand (SendCommandEvent event, @Root Player player) throws IOException {
-        String command = event.getCommand();
+        String command = event.getCommand().toLowerCase();
         String name = player.getName();
         Location<World> location = player.getLocation();
         int xLocation = (int) location.getX();
