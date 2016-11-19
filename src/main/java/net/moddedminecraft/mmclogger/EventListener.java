@@ -24,9 +24,9 @@ public class EventListener {
         String name = player.getName();
         String message = TextSerializers.FORMATTING_CODE.serialize(event.getFormatter().getBody().toText());
         Location<World> location = player.getLocation();
-        int xLocation = (int) location.getX();
-        int yLocation = (int) location.getY();
-        int zLocation = (int) location.getZ();
+        int xLocation = location.getBlockX();
+        int yLocation = location.getBlockY();
+        int zLocation = location.getBlockZ();
         String world = location.getExtent().getName();
         String date = plugin.getDate();
         try {
@@ -41,15 +41,16 @@ public class EventListener {
     @Listener
     public void onPlayerCommand (SendCommandEvent event, @Root Player player) throws IOException {
         String command = event.getCommand().toLowerCase();
+        String arguments = event.getArguments();
         String name = player.getName();
         Location<World> location = player.getLocation();
-        int xLocation = (int) location.getX();
-        int yLocation = (int) location.getY();
-        int zLocation = (int) location.getZ();
+        int xLocation = location.getBlockX();
+        int yLocation = location.getBlockY();
+        int zLocation = location.getBlockZ();
         String world = location.getExtent().getName();
         String date = plugin.getDate();
         plugin.checkPlayer(name);
 
-        plugin.processCMDInformation(player, name, command, xLocation, yLocation, zLocation, world, date);
+        plugin.processCMDInformation(player, name, command, arguments, xLocation, yLocation, zLocation, world, date);
     }
 }

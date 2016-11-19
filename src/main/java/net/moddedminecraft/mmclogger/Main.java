@@ -15,7 +15,6 @@ import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.Scheduler;
-import org.spongepowered.api.scheduler.Task;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.0")
+@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.0", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -43,6 +42,8 @@ public class Main {
     private HoconConfigurationLoader loader;
     public ConfigurationNode rootNode;
 
+    public String prefix = "&9[&6MMCLogger&9] &6";
+
     private File chatlogFolder = new File(configDir, "chatlogs/logs");
     private File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
     public File playersFolder = new File(configDir, "chatlogs/players");
@@ -54,7 +55,6 @@ public class Main {
     public File notifyCommandFile = new File(configDir, "chatlogs/notifyCommands.log");
 
     private Scheduler scheduler = Sponge.getScheduler();
-    public Task.Builder taskBuilder = scheduler.createTaskBuilder();
 
     @Listener
     public void onInitialization(GameInitializationEvent e) throws ObjectMappingException, IOException {
@@ -83,11 +83,7 @@ public class Main {
         configCheck();
 
 
-        taskBuilder.execute(new Runnable() {
-            public void run() {
-                checkDate();
-            }
-        }).interval(1, TimeUnit.SECONDS).name("check date").submit(this);
+        scheduler.createTaskBuilder().execute(this::checkDate).interval(1, TimeUnit.SECONDS).name("mmclogger-S-DateChecker").submit(this);
     }
 
     @Listener
@@ -96,69 +92,66 @@ public class Main {
     }
 
     void processInformation(Player player, String playerName, String chat, int x, int y, int z, String worldName, String date) {
-        boolean globalChat = rootNode.getNode("Log", "Toggle", "GlobalChat").getBoolean();
-        boolean playerChat = rootNode.getNode("Log", "Toggle", "PlayerChat").getBoolean();
-        boolean logNotifyChat = rootNode.getNode("Log", "Toggle", "LogNotifyChat").getBoolean();
-        boolean inGameNotifications = rootNode.getNode("Log", "Toggle", "InGameNotifications").getBoolean();
+        boolean globalChat = rootNode.getNode("log", "toggle", "global-chat").getBoolean();
+        boolean playerChat = rootNode.getNode("log", "toggle", "player-chat").getBoolean();
+        boolean logNotifyChat = rootNode.getNode("log", "toggle", "log-notify-chat").getBoolean();
+        boolean inGameNotifications = rootNode.getNode("log", "toggle", "in-game-notifications").getBoolean();
 
         File playerFile = new File(playersFolder, playerName + ".log");
         String message = chat.replaceAll("(&([a-f0-9]))", "");
 
         try {
             if (globalChat) {
-                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), getChatFile())).async().name("Global Chat Log").submit(this);
+                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), getChatFile())).async().name("mmclogger-A-GlobalChatLog").submit(this);
             }
             if (playerChat) {
-                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), playerFile)).async().name("Player Chat Log").submit(this);
+                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerChatLog").submit(this);
             }
             if ((checkNotifyListPlayer(message)) && (logNotifyChat)) {
-                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), notifyChatFile)).async().name("Notify Chat Log").submit(this);
+                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), notifyChatFile)).async().name("mmclogger-A-NotifyChatLog").submit(this);
             }
             if ((checkNotifyListPlayer(message)) && (inGameNotifications)) {
-                notifyPlayer("&9[&6MMCLogger&9] &6" + playerName + "&f: " + message);
+                notifyPlayer(prefix + playerName + "&f: " + message);
             }
-        } catch (ObjectMappingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ObjectMappingException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    void processCMDInformation(Player player, String playerName, String command, int x, int y, int z, String worldName, String date) {
+    void processCMDInformation(Player player, String playerName, String command, String args, int x, int y, int z, String worldName, String date) {
 
-        boolean playerCommand = rootNode.getNode("Log", "Toggle", "PlayerCommands").getBoolean();
-        boolean globalCommand = rootNode.getNode("Log", "Toggle", "GlobalCommands").getBoolean();
-        boolean logNotifyCommands = rootNode.getNode("Log", "Toggle", "LogNotifyCommands").getBoolean();
-        boolean inGameNotifications = rootNode.getNode("Log", "Toggle", "InGameNotifications").getBoolean();
+        boolean playerCommand = rootNode.getNode("log", "toggle", "player-commands").getBoolean();
+        boolean globalCommand = rootNode.getNode("log", "toggle", "global-commands").getBoolean();
+        boolean logNotifyCommands = rootNode.getNode("log", "toggle", "log-notify-commands").getBoolean();
+        boolean inGameNotifications = rootNode.getNode("log", "toggle", "in-game-notifications").getBoolean();
 
         File playerFile = new File(playersFolder, playerName + ".log");
+        String commandLine = "/" +command + " " + args;
 
         try {
             if ((globalCommand) && (!commandCheck(command))) {
-                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, command, x, y, z, worldName, date), getCmdFile())).async().name("Global Command Log").submit(this);
+                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
             }
             if ((playerCommand) && (!commandCheck(command))) {
-                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, command, x, y, z, worldName, date), playerFile)).async().name("Player Command Log").submit(this);
+               scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
             }
             if ((checkNotifyListCMD(command)) && (logNotifyCommands)) {
-                Task task = taskBuilder.execute(new WriteFile(formatLog(playerName, command, x, y, z, worldName, date), notifyCommandFile)).async().name("Notify Command Log").submit(this);
+                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
             }
             if ((checkNotifyListCMD(command)) && (inGameNotifications)) {
-                notifyPlayer("&9[&6MMCLogger&9] &6" + playerName + "&f: " + command);
+                notifyPlayer(prefix + playerName + "&f: " + commandLine);
             }
-        } catch (ObjectMappingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ObjectMappingException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    public boolean commandCheck(String command) throws ObjectMappingException {
-        List commands = rootNode.getNode("Log", "CommandLog", "Blacklist").getList(TypeToken.of(String.class));
-        String[] commandsplit = command.split(" ");
-        String commandconvert = commandsplit[0];
-        for (int i = 0; i < commands.size(); i++) {
-            if (commandconvert.matches((String)commands.get(i))) {
+    public boolean commandCheck(String blacklist) throws ObjectMappingException {
+        List<String> blacklists = rootNode.getNode("log", "command-log", "blacklist").getList(TypeToken.of(String.class));
+        String[] blacklistsplit = blacklist.split(" ");
+        String blacklistconvert = blacklistsplit[0];
+        for (String blacklist1 : blacklists) {
+            if (blacklistconvert.matches(blacklist1)) {
                 return true;
             }
         }
@@ -166,7 +159,7 @@ public class Main {
     }
 
     private String[] formatLog(String playerName, String command, int x, int y, int z, String worldName, String date) throws IOException {
-        String log = rootNode.getNode("Log", "LogFormat").getString();
+        String log = rootNode.getNode("log", "log-format").getString();
         if (log.contains("%date")) {
             log = log.replaceAll("%date", date);
         }
@@ -228,9 +221,9 @@ public class Main {
     }
 
     public boolean checkNotifyListPlayer(String message) throws ObjectMappingException  {
-        List messageList = rootNode.getNode("Log", "Notifications", "Chat").getList(TypeToken.of(String.class));
-        for (int i = 0; i < messageList.size(); i++) {
-            if (message.toLowerCase().contains((CharSequence)messageList.get(i))) {
+        List<String> messageList = rootNode.getNode("log", "notifications", "chat").getList(TypeToken.of(String.class));
+        for (String aMessageList : messageList) {
+            if (message.toLowerCase().contains(aMessageList)) {
                 return true;
             }
         }
@@ -238,11 +231,11 @@ public class Main {
     }
 
     public boolean checkNotifyListCMD(String command) throws ObjectMappingException {
-        List commands = rootNode.getNode("Log", "Notifications", "Commands").getList(TypeToken.of(String.class));
+        List<String> commands = rootNode.getNode("log", "notifications", "commands").getList(TypeToken.of(String.class));
         String[] commandsplit = command.split(" ");
         String commandconvert = commandsplit[0];
-        for (int i = 0; i < commands.size(); i++) {
-            if (commandconvert.matches((String)commands.get(i))) {
+        for (String command1 : commands) {
+            if (commandconvert.matches(command1)) {
                 return true;
             }
         }
@@ -284,19 +277,19 @@ public class Main {
         try {
             if (!defaultConf.exists()) {
                 defaultConf.createNewFile();
-                rootNode.getNode("Log", "Toggle", "GlobalCommands").setValue(true);
-                rootNode.getNode("Log", "Toggle", "GlobalChat").setValue(true);
-                rootNode.getNode("Log", "Toggle", "PlayerCommands").setValue(true);
-                rootNode.getNode("Log", "Toggle", "PlayerChat").setValue(true);
-                rootNode.getNode("Log", "Toggle", "LogNotifyChat").setValue(true);
-                rootNode.getNode("Log", "Toggle", "InGameNotifications").setValue(true);
-                rootNode.getNode("Log", "Toggle", "LogNotifyCommands").setValue(true);
-                rootNode.getNode("Log", "Toggle", "PlayerLogin").setValue(true);
-                rootNode.getNode("Log", "Toggle", "GlobalLogin").setValue(true);
-                rootNode.getNode("Log", "CommandLog", "Blacklist").setValue(Arrays.asList(blacklist));
-                rootNode.getNode("Log", "LogFormat").setValue("[%date] %name: %content");
-                rootNode.getNode("Log", "Notifications", "Chat").setValue(Arrays.asList(chatNotifyList));
-                rootNode.getNode("Log", "Notifications", "Commands").setValue(Arrays.asList(commandNotifyList));
+                rootNode.getNode("log", "toggle", "global-commands").setValue(true);
+                rootNode.getNode("log", "toggle", "global-chat").setValue(true);
+                rootNode.getNode("log", "toggle", "player-commands").setValue(true);
+                rootNode.getNode("log", "toggle", "player-chat").setValue(true);
+                rootNode.getNode("log", "toggle", "log-notify-chat").setValue(true);
+                rootNode.getNode("log", "toggle", "in-game-notifications").setValue(true);
+                rootNode.getNode("log", "toggle", "log-notify-commands").setValue(true);
+                rootNode.getNode("log", "toggle", "player-login").setValue(true);
+                rootNode.getNode("log", "toggle", "global-login").setValue(true);
+                rootNode.getNode("log", "command-log", "blacklist").setValue(Arrays.asList(blacklist));
+                rootNode.getNode("log", "log-format").setValue("[%date] %name: %content");
+                rootNode.getNode("log", "notifications", "chat").setValue(Arrays.asList(chatNotifyList));
+                rootNode.getNode("log", "notifications", "commands").setValue(Arrays.asList(commandNotifyList));
             }
             loader.save(rootNode);
         } catch (IOException e) {
