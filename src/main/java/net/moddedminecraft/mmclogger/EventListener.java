@@ -30,7 +30,7 @@ public class EventListener {
         String world = location.getExtent().getName();
         String date = plugin.getDate();
         try {
-            Config.checkPlayer(name);
+            plugin.checkPlayer(name);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,7 +49,7 @@ public class EventListener {
         int zLocation = location.getBlockZ();
         String world = location.getExtent().getName();
         String date = plugin.getDate();
-        Config.checkPlayer(name);
+        plugin.checkPlayer(name);
 
         plugin.processCMDInformation(player, name, command, arguments, xLocation, yLocation, zLocation, world, date);
     }
