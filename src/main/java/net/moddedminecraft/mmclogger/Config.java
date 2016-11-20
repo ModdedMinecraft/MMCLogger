@@ -15,18 +15,18 @@ public class Config {
 
     private static Main plugin;
 
-    static String[] BlackListString = {
+    private String[] BlackListString = {
             "help",
             "who",
             "home"
     };
-    static String[] commandNotifyListString = {
+    private String[] commandNotifyListString = {
             "item",
             "give",
             "sponge",
             "op"
     };
-    static String[] chatNotifyListString = {
+    private String[] chatNotifyListString = {
             "ddos",
             "hack",
             "flymod",
@@ -34,19 +34,19 @@ public class Config {
             "duplicate",
             "duplication"};
 
-    public static List<String> BlackList;
-    public static List<String> commandNotifyList;
-    public static List<String> chatNotifyList;
-    public static boolean globalCommands;
-    public static boolean globalChat;
-    public static boolean playerCommands;
-    public static boolean playerChat;
-    public static boolean logNotifyChat;
-    public static boolean inGameNotifications;
-    public static boolean logNotifyCommands;
-    public static boolean playerLogin;
-    public static boolean GlobalLogin;
-    public static String logFormat;
+    public List<String> BlackList;
+    public List<String> commandNotifyList;
+    public List<String> chatNotifyList;
+    public boolean globalCommands;
+    public boolean globalChat;
+    public boolean playerCommands;
+    public boolean playerChat;
+    public boolean logNotifyChat;
+    public boolean inGameNotifications;
+    public boolean logNotifyCommands;
+    public boolean playerLogin;
+    public boolean globalLogin;
+    public String logFormat;
 
     private static ConfigurationLoader<CommentedConfigurationNode> loader;
     private static CommentedConfigurationNode config;
@@ -77,21 +77,21 @@ public class Config {
         inGameNotifications =  check(config.getNode("log", "toggle", "in-game-notifications"), true, "Notify players in-game of specified words / commands").getBoolean();
         logNotifyCommands =  check(config.getNode("log", "toggle", "log-notify-commands"), true, "Log commands specified in the notifications-commands section.").getBoolean();
         playerLogin =  check(config.getNode("log", "toggle", "player-login"), true, "Log all player logins to the players own file.").getBoolean();
-        GlobalLogin =  check(config.getNode("log", "toggle", "global-login"), true, "Log all player logins to the main log file.").getBoolean();
-        logFormat =  check(config.getNode("log", "log-format"), "[%date] %name: %content", "The format of which the logs should be writen.").getString();
+        globalLogin =  check(config.getNode("log", "toggle", "global-login"), true, "Log all player logins to the main log file.").getBoolean();
+        logFormat =  check(config.getNode("log", "log-format"), "[%date] %name: %content", "The format of which the logs should be written. Formatting: %date, %world, %x, %y, %z, %name, %content").getString();
 
         loader.save(config);
 
     }
 
-    private static CommentedConfigurationNode check(CommentedConfigurationNode node, Object defaultValue, String comment) {
+    private CommentedConfigurationNode check(CommentedConfigurationNode node, Object defaultValue, String comment) {
         if (node.isVirtual()) {
             node.setValue(defaultValue).setComment(comment);
         }
         return node;
     }
 
-    private static CommentedConfigurationNode checkList(CommentedConfigurationNode node, String[] defaultValue, String comment) {
+    private CommentedConfigurationNode checkList(CommentedConfigurationNode node, String[] defaultValue, String comment) {
         if (node.isVirtual()) {
             node.setValue(Arrays.asList(defaultValue)).setComment(comment);
         }

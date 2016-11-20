@@ -131,6 +131,38 @@ public class Main {
         }
     }
 
+    public void processInformationJoin(String playerName, int x, int y, int z, String worldName, String date) throws IOException {
+        boolean globalLogin = config().globalLogin;
+        boolean playerLogin = config().playerLogin;
+
+        File playerFile = new File(playersFolder, playerName + ".log");
+        String log = " logged in.";
+        String[] content = formatLog(playerName, log, x, y, z, worldName, date);
+
+        if (globalLogin) {
+            scheduler.createTaskBuilder().execute(new WriteFile(content, getChatFile())).async().name("mmclogger-A-globalLogin").submit(this);
+        }
+        if (playerLogin) {
+            scheduler.createTaskBuilder().execute(new WriteFile(content, playerFile)).async().name("mmclogger-A-playerLogin").submit(this);
+        }
+    }
+
+    public void processInformationQuit(String playerName, int x, int y, int z, String worldName, String date) throws IOException {
+        boolean globalLogin = config().globalLogin;
+        boolean playerLogin = config().playerLogin;
+
+        File playerFile = new File(playersFolder, playerName + ".log");
+        String log = " logged out.";
+        String[] content = formatLog(playerName, log, x, y, z, worldName, date);
+
+        if (globalLogin) {
+            scheduler.createTaskBuilder().execute(new WriteFile(content, getChatFile())).async().name("mmclogger-A-globalLogin").submit(this);
+        }
+        if (playerLogin) {
+            scheduler.createTaskBuilder().execute(new WriteFile(content, playerFile)).async().name("mmclogger-A-playerLogin").submit(this);
+        }
+    }
+
     private boolean commandCheck(String blacklist) throws ObjectMappingException {
         List<String> blacklists = config().BlackList;
         String[] blacklistsplit = blacklist.split(" ");
