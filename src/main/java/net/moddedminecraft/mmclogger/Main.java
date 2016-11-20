@@ -136,7 +136,7 @@ public class Main {
         boolean playerLogin = config().playerLogin;
 
         File playerFile = new File(playersFolder, playerName + ".log");
-        String log = " logged in.";
+        String log = "logged in.";
         String[] content = formatLog(playerName, log, x, y, z, worldName, date);
 
         if (globalLogin) {
@@ -152,7 +152,7 @@ public class Main {
         boolean playerLogin = config().playerLogin;
 
         File playerFile = new File(playersFolder, playerName + ".log");
-        String log = " logged out.";
+        String log = "logged out.";
         String[] content = formatLog(playerName, log, x, y, z, worldName, date);
 
         if (globalLogin) {
