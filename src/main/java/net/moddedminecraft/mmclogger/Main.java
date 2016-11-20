@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -37,10 +36,11 @@ public class Main {
 
     @Inject
     @DefaultConfig(sharedRoot = false)
-    private File defaultConf;
+    public File defaultConf;
 
-    private HoconConfigurationLoader loader;
+    public HoconConfigurationLoader loader;
     public ConfigurationNode rootNode;
+    private Config config;
 
     public String prefix = "&9[&6MMCLogger&9] &6";
 
@@ -57,12 +57,16 @@ public class Main {
     private Scheduler scheduler = Sponge.getScheduler();
 
     @Listener
-    public void onInitialization(GameInitializationEvent e) throws ObjectMappingException, IOException {
+    public void onInitialization(GameInitializationEvent e){
         loader = HoconConfigurationLoader.builder().setFile(defaultConf).build();
 
         Sponge.getEventManager().registerListeners(this, new EventListener(this));
 
-        rootNode = loader.load();
+        try {
+            rootNode = loader.load();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
 
         if (!chatlogFolder.isDirectory()) {
             chatlogFolder.mkdirs();
@@ -80,7 +84,7 @@ public class Main {
             logFolder.mkdirs();
         }
 
-        configCheck();
+        this.config = new Config(defaultConf, this);
 
 
         scheduler.createTaskBuilder().execute(this::checkDate).interval(1, TimeUnit.SECONDS).name("mmclogger-S-DateChecker").submit(this);
@@ -185,13 +189,6 @@ public class Main {
         return new String[]{log};
     }
 
-    public void checkPlayer(String name) throws IOException
-    {
-        File file = new File(playersFolder, name + ".log");
-        if (!file.exists()) {
-            file.createNewFile();
-        }
-    }
 
     public String getDate() {
         DateFormat dateFormat = new SimpleDateFormat("MMM/dd/yyyy hh:mm:ss a");
@@ -252,48 +249,6 @@ public class Main {
             if (player.hasPermission("mmclogger.notify")) {
                 Util.sendMessage(player, string);
             }
-        }
-    }
-
-    private void configCheck()
-    {
-        String[] blacklist = {
-                "help",
-                "who",
-                "home" };
-        String[] commandNotifyList = {
-                "item",
-                "give",
-                "sponge",
-                "op" };
-        String[] chatNotifyList = {
-                "ddos",
-                "hack",
-                "flymod",
-                "dupe",
-                "duplicate",
-                "duplication" };
-
-        try {
-            if (!defaultConf.exists()) {
-                defaultConf.createNewFile();
-                rootNode.getNode("log", "toggle", "global-commands").setValue(true);
-                rootNode.getNode("log", "toggle", "global-chat").setValue(true);
-                rootNode.getNode("log", "toggle", "player-commands").setValue(true);
-                rootNode.getNode("log", "toggle", "player-chat").setValue(true);
-                rootNode.getNode("log", "toggle", "log-notify-chat").setValue(true);
-                rootNode.getNode("log", "toggle", "in-game-notifications").setValue(true);
-                rootNode.getNode("log", "toggle", "log-notify-commands").setValue(true);
-                rootNode.getNode("log", "toggle", "player-login").setValue(true);
-                rootNode.getNode("log", "toggle", "global-login").setValue(true);
-                rootNode.getNode("log", "command-log", "blacklist").setValue(Arrays.asList(blacklist));
-                rootNode.getNode("log", "log-format").setValue("[%date] %name: %content");
-                rootNode.getNode("log", "notifications", "chat").setValue(Arrays.asList(chatNotifyList));
-                rootNode.getNode("log", "notifications", "commands").setValue(Arrays.asList(commandNotifyList));
-            }
-            loader.save(rootNode);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

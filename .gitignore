@@ -12,7 +12,6 @@
 hs_err_pid*
 
 target/
-pom.xml
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -29,3 +28,4 @@ buildNumber.properties
 /out/
 /.idea/
 *.iml
+pom.xml
