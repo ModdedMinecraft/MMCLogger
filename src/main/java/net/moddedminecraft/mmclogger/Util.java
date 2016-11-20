@@ -8,26 +8,16 @@ import org.spongepowered.api.text.serializer.TextSerializers;
 
 public class Util {
 
-    private Main instance;
-
-    public Util(Main instance) {
-        this.instance = instance;
-    }
-
     public static void broadcastMessage(String message) {
-        Sponge.getServer().getBroadcastChannel().send(processColours(message), ChatTypes.SYSTEM);
+        Sponge.getServer().getBroadcastChannel().send(fromLegacy(message), ChatTypes.SYSTEM);
     }
 
-    public static void sendMessage(CommandSource sender, String message) {
-        sender.sendMessage(processColours(message));
+    static void sendMessage(CommandSource sender, String message) {
+        sender.sendMessage(fromLegacy(message));
     }
 
-    private static Text processColours(String str) {
-        return fromLegacy('&', str);
-    }
-
-    private static Text fromLegacy(char legacyChar, String legacy) {
-        return TextSerializers.formattingCode(legacyChar).deserializeUnchecked(legacy);
+    private static Text fromLegacy(String legacy) {
+        return TextSerializers.FORMATTING_CODE.deserializeUnchecked(legacy);
     }
 
 }

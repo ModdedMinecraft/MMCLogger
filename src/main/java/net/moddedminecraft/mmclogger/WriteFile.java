@@ -9,13 +9,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public class WriteFile implements Consumer<Task> {
+class WriteFile implements Consumer<Task> {
 
-    public File type;
-    public String[] i;
+    private File type;
+    private String[] i;
 
-    WriteFile(String[] index, File t)
-    {
+    WriteFile(String[] index, File t) {
         this.type = t;
         this.i = index;
     }
@@ -23,8 +22,8 @@ public class WriteFile implements Consumer<Task> {
     @Override
     public void accept(Task task) {
         File log = this.type;
-        BufferedWriter buffwriter = null;
-        FileWriter filewriter = null;
+        BufferedWriter buffwriter;
+        FileWriter filewriter;
         try {
             filewriter = new FileWriter(log, true);
             buffwriter = new BufferedWriter(filewriter);
@@ -38,7 +37,7 @@ public class WriteFile implements Consumer<Task> {
             task.cancel();
 
         }
-        catch (IOException e) {}
+        catch (IOException ignored) {}
 
     }
 }

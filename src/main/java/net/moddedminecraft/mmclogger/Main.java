@@ -22,7 +22,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Plugin(id = "mmclogger", name = "MMCLogger", version = "1.0", authors = {"Leelawd93"})
 public class Main {
@@ -36,30 +35,29 @@ public class Main {
 
     @Inject
     @DefaultConfig(sharedRoot = false)
-    public File defaultConf;
+    private File defaultConf;
 
-    public HoconConfigurationLoader loader;
-    public ConfigurationNode rootNode;
+    HoconConfigurationLoader loader;
+    ConfigurationNode rootNode;
     private Config config;
 
-    public String prefix = "&9[&6MMCLogger&9] &6";
+    private String prefix = "&9[&6MMCLogger&9] &6";
 
-    private File chatlogFolder = new File(configDir, "chatlogs/logs");
-    private File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
-    public File playersFolder = new File(configDir, "chatlogs/players");
+    File chatlogFolder = new File(configDir, "chatlogs/logs");
+    File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
+    File playersFolder = new File(configDir, "chatlogs/players");
 
-    private File logFolder = new File(chatlogFolder, getFolderDate());
-    private File clogFolder = new File(commandlogFolder, getFolderDate());
+    File logFolder = new File(chatlogFolder, getFolderDate());
+    File clogFolder = new File(commandlogFolder, getFolderDate());
 
-    public File notifyChatFile = new File(configDir, "chatlogs/notifyChat.log");
-    public File notifyCommandFile = new File(configDir, "chatlogs/notifyCommands.log");
+    private File notifyChatFile = new File(configDir, "chatlogs/notifyChat.log");
+    private File notifyCommandFile = new File(configDir, "chatlogs/notifyCommands.log");
 
     private Scheduler scheduler = Sponge.getScheduler();
 
     @Listener
-    public void onInitialization(GameInitializationEvent e){
+    public void onInitialization(GameInitializationEvent e) {
         loader = HoconConfigurationLoader.builder().setFile(defaultConf).build();
-
         Sponge.getEventManager().registerListeners(this, new EventListener(this));
 
         try {
@@ -68,26 +66,8 @@ public class Main {
             e1.printStackTrace();
         }
 
-        if (!chatlogFolder.isDirectory()) {
-            chatlogFolder.mkdirs();
-        }
-        if (!commandlogFolder.isDirectory()) {
-            commandlogFolder.mkdirs();
-        }
-        if (!playersFolder.isDirectory()) {
-            playersFolder.mkdirs();
-        }
-        if (!clogFolder.isDirectory()) {
-            clogFolder.mkdirs();
-        }
-        if (!logFolder.isDirectory()) {
-            logFolder.mkdirs();
-        }
-
         this.config = new Config(defaultConf, this);
-
-
-        scheduler.createTaskBuilder().execute(this::checkDate).interval(1, TimeUnit.SECONDS).name("mmclogger-S-DateChecker").submit(this);
+        //scheduler.createTaskBuilder().execute(this::checkDate).interval(1, TimeUnit.SECONDS).name("mmclogger-S-DateChecker").submit(this);
     }
 
     @Listener
@@ -150,7 +130,7 @@ public class Main {
         }
     }
 
-    public boolean commandCheck(String blacklist) throws ObjectMappingException {
+    private boolean commandCheck(String blacklist) throws ObjectMappingException {
         List<String> blacklists = rootNode.getNode("log", "command-log", "blacklist").getList(TypeToken.of(String.class));
         String[] blacklistsplit = blacklist.split(" ");
         String blacklistconvert = blacklistsplit[0];
@@ -190,7 +170,7 @@ public class Main {
     }
 
 
-    public String getDate() {
+    String getDate() {
         DateFormat dateFormat = new SimpleDateFormat("MMM/dd/yyyy hh:mm:ss a");
         Date date = new Date();
         return dateFormat.format(date);
@@ -209,15 +189,21 @@ public class Main {
         return dateFormat.format(date);
     }
 
-    public File getChatFile() {
+    /*private void checkDate() {
+        Date now = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+    }*/
+
+
+    private File getChatFile() {
         return new File(logFolder, getFileDate() + "-chat.log");
     }
 
-    public File getCmdFile() {
+    private File getCmdFile() {
         return new File(clogFolder, getFileDate() + "-cmd.log");
     }
 
-    public boolean checkNotifyListPlayer(String message) throws ObjectMappingException  {
+    private boolean checkNotifyListPlayer(String message) throws ObjectMappingException  {
         List<String> messageList = rootNode.getNode("log", "notifications", "chat").getList(TypeToken.of(String.class));
         for (String aMessageList : messageList) {
             if (message.toLowerCase().contains(aMessageList)) {
@@ -227,7 +213,7 @@ public class Main {
         return false;
     }
 
-    public boolean checkNotifyListCMD(String command) throws ObjectMappingException {
+    private boolean checkNotifyListCMD(String command) throws ObjectMappingException {
         List<String> commands = rootNode.getNode("log", "notifications", "commands").getList(TypeToken.of(String.class));
         String[] commandsplit = command.split(" ");
         String commandconvert = commandsplit[0];
@@ -239,12 +225,7 @@ public class Main {
         return false;
     }
 
-    private void checkDate() {
-        Date now = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
-    }
-
-    public void notifyPlayer(String string) {
+    private void notifyPlayer(String string) {
         for (Player player : Sponge.getServer().getOnlinePlayers()) {
             if (player.hasPermission("mmclogger.notify")) {
                 Util.sendMessage(player, string);

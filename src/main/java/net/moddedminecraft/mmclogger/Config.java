@@ -13,10 +13,11 @@ public class Config {
         plugin = main;
         confFile = file;
         configCheck();
+        checkFolders();
     }
 
 
-    public void configCheck() {
+    private void configCheck() {
         String[] blacklist = {
                 "help",
                 "who",
@@ -83,8 +84,25 @@ public class Config {
         }
     }
 
-    public static void checkPlayer(String name) throws IOException
-    {
+    private void checkFolders() {
+        if (!plugin.chatlogFolder.isDirectory()) {
+            plugin.chatlogFolder.mkdirs();
+        }
+        if (!plugin.commandlogFolder.isDirectory()) {
+            plugin.commandlogFolder.mkdirs();
+        }
+        if (!plugin.playersFolder.isDirectory()) {
+            plugin.playersFolder.mkdirs();
+        }
+        if (!plugin.clogFolder.isDirectory()) {
+            plugin.clogFolder.mkdirs();
+        }
+        if (!plugin.logFolder.isDirectory()) {
+            plugin.logFolder.mkdirs();
+        }
+    }
+
+    static void checkPlayer(String name) throws IOException {
         File file = new File(plugin.playersFolder, name + ".log");
         if (!file.exists()) {
             file.createNewFile();

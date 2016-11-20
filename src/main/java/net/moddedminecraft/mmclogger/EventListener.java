@@ -11,16 +11,15 @@ import org.spongepowered.api.world.World;
 
 import java.io.IOException;
 
-public class EventListener {
+class EventListener {
     private Main plugin;
 
-    public EventListener(Main main) {
+    EventListener(Main main) {
         plugin = main;
     }
 
     @Listener
-    public void onPlayerChat(MessageChannelEvent.Chat event, @Root Player player)
-    {
+    public void onPlayerChat(MessageChannelEvent.Chat event, @Root Player player) {
         String name = player.getName();
         String message = TextSerializers.FORMATTING_CODE.serialize(event.getFormatter().getBody().toText());
         Location<World> location = player.getLocation();
