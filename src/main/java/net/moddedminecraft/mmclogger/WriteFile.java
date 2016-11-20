@@ -9,7 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-class WriteFile implements Consumer<Task> {
+public class WriteFile implements Consumer<Task> {
 
     private File type;
     private String[] i;

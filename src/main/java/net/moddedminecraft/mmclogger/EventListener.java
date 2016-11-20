@@ -11,7 +11,7 @@ import org.spongepowered.api.world.World;
 
 import java.io.IOException;
 
-class EventListener {
+public class EventListener {
     private Main plugin;
 
     EventListener(Main main) {
