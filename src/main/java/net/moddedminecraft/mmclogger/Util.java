@@ -12,7 +12,7 @@ public class Util {
         Sponge.getServer().getBroadcastChannel().send(fromLegacy(message), ChatTypes.SYSTEM);
     }
 
-    static void sendMessage(CommandSource sender, String message) {
+    public static void sendMessage(CommandSource sender, String message) {
         sender.sendMessage(fromLegacy(message));
     }
 

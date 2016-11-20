@@ -1,9 +1,6 @@
 package net.moddedminecraft.mmclogger;
 
-import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
@@ -11,6 +8,8 @@ import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.filter.cause.Root;
+import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.plugin.Plugin;
@@ -18,6 +17,7 @@ import org.spongepowered.api.scheduler.Scheduler;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,13 +35,16 @@ public class Main {
 
     @Inject
     @DefaultConfig(sharedRoot = false)
-    private File defaultConf;
+    public Path defaultConf;
 
-    HoconConfigurationLoader loader;
-    ConfigurationNode rootNode;
+    @Inject
+    @DefaultConfig(sharedRoot = false)
+    public File defaultConfFile;
+
+
     private Config config;
 
-    private String prefix = "&9[&6MMCLogger&9] &6";
+    public String prefix = "&9[&6MMCLogger&9] &6";
 
     File chatlogFolder = new File(configDir, "chatlogs/logs");
     File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
@@ -56,17 +59,9 @@ public class Main {
     private Scheduler scheduler = Sponge.getScheduler();
 
     @Listener
-    public void onInitialization(GameInitializationEvent e) {
-        loader = HoconConfigurationLoader.builder().setFile(defaultConf).build();
+    public void onInitialization(GameInitializationEvent e) throws IOException, ObjectMappingException {
         Sponge.getEventManager().registerListeners(this, new EventListener(this));
-
-        try {
-            rootNode = loader.load();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-
-        this.config = new Config(defaultConf, this);
+        this.config = new Config(this);
         //scheduler.createTaskBuilder().execute(this::checkDate).interval(1, TimeUnit.SECONDS).name("mmclogger-S-DateChecker").submit(this);
     }
 
@@ -75,11 +70,17 @@ public class Main {
         logger.info("MMCLogger Loaded");
     }
 
+    @Listener
+    public void onPluginReload(GameReloadEvent event, @Root Player player) throws IOException, ObjectMappingException {
+        this.config = new Config(this);
+        Util.sendMessage(player, prefix + "Config Reloaded");
+    }
+
     void processInformation(Player player, String playerName, String chat, int x, int y, int z, String worldName, String date) {
-        boolean globalChat = rootNode.getNode("log", "toggle", "global-chat").getBoolean();
-        boolean playerChat = rootNode.getNode("log", "toggle", "player-chat").getBoolean();
-        boolean logNotifyChat = rootNode.getNode("log", "toggle", "log-notify-chat").getBoolean();
-        boolean inGameNotifications = rootNode.getNode("log", "toggle", "in-game-notifications").getBoolean();
+        boolean globalChat = config().globalChat;
+        boolean playerChat = config().playerChat;
+        boolean logNotifyChat = config().logNotifyChat;
+        boolean inGameNotifications = config().inGameNotifications;
 
         File playerFile = new File(playersFolder, playerName + ".log");
         String message = chat.replaceAll("(&([a-f0-9]))", "");
@@ -104,10 +105,10 @@ public class Main {
 
     void processCMDInformation(Player player, String playerName, String command, String args, int x, int y, int z, String worldName, String date) {
 
-        boolean playerCommand = rootNode.getNode("log", "toggle", "player-commands").getBoolean();
-        boolean globalCommand = rootNode.getNode("log", "toggle", "global-commands").getBoolean();
-        boolean logNotifyCommands = rootNode.getNode("log", "toggle", "log-notify-commands").getBoolean();
-        boolean inGameNotifications = rootNode.getNode("log", "toggle", "in-game-notifications").getBoolean();
+        boolean playerCommand = config().playerCommands;
+        boolean globalCommand = config().globalCommands;
+        boolean logNotifyCommands = config().logNotifyCommands;
+        boolean inGameNotifications = config().inGameNotifications;
 
         File playerFile = new File(playersFolder, playerName + ".log");
         String commandLine = "/" +command + " " + args;
@@ -131,7 +132,7 @@ public class Main {
     }
 
     private boolean commandCheck(String blacklist) throws ObjectMappingException {
-        List<String> blacklists = rootNode.getNode("log", "command-log", "blacklist").getList(TypeToken.of(String.class));
+        List<String> blacklists = config().BlackList;
         String[] blacklistsplit = blacklist.split(" ");
         String blacklistconvert = blacklistsplit[0];
         for (String blacklist1 : blacklists) {
@@ -143,7 +144,7 @@ public class Main {
     }
 
     private String[] formatLog(String playerName, String command, int x, int y, int z, String worldName, String date) throws IOException {
-        String log = rootNode.getNode("log", "log-format").getString();
+        String log = config().logFormat;
         if (log.contains("%date")) {
             log = log.replaceAll("%date", date);
         }
@@ -167,6 +168,10 @@ public class Main {
         }
 
         return new String[]{log};
+    }
+
+    public Config config() {
+        return config;
     }
 
 
@@ -204,7 +209,7 @@ public class Main {
     }
 
     private boolean checkNotifyListPlayer(String message) throws ObjectMappingException  {
-        List<String> messageList = rootNode.getNode("log", "notifications", "chat").getList(TypeToken.of(String.class));
+        List<String> messageList = config().chatNotifyList;
         for (String aMessageList : messageList) {
             if (message.toLowerCase().contains(aMessageList)) {
                 return true;
@@ -214,7 +219,7 @@ public class Main {
     }
 
     private boolean checkNotifyListCMD(String command) throws ObjectMappingException {
-        List<String> commands = rootNode.getNode("log", "notifications", "commands").getList(TypeToken.of(String.class));
+        List<String> commands = config().commandNotifyList;
         String[] commandsplit = command.split(" ");
         String commandconvert = commandsplit[0];
         for (String command1 : commands) {
