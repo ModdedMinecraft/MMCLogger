@@ -86,16 +86,16 @@ public class Main {
         String message = chat.replaceAll("(&([a-f0-9]))", "");
 
         try {
-            if (globalChat) {
+            if (globalChat && (!playerCheck(playerName))) {
                 scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), getChatFile())).async().name("mmclogger-A-GlobalChatLog").submit(this);
             }
-            if (playerChat) {
+            if (playerChat && (!playerCheck(playerName))) {
                 scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerChatLog").submit(this);
             }
-            if ((checkNotifyListPlayer(message)) && (logNotifyChat)) {
+            if ((checkNotifyListPlayer(message)) && (logNotifyChat) && (!playerCheck(playerName))) {
                 scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), notifyChatFile)).async().name("mmclogger-A-NotifyChatLog").submit(this);
             }
-            if ((checkNotifyListPlayer(message)) && (inGameNotifications)) {
+            if ((checkNotifyListPlayer(message)) && (inGameNotifications) && (!playerCheck(playerName))) {
                 notifyPlayer(prefix + playerName + "&f: " + message);
             }
         } catch (ObjectMappingException | IOException e) {
@@ -114,16 +114,16 @@ public class Main {
         String commandLine = "/" +command + " " + args;
 
         try {
-            if ((globalCommand) && (!commandCheck(command))) {
+            if ((globalCommand) && (!commandCheck(command)) && (!playerCheck(playerName))) {
                 scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
             }
-            if ((playerCommand) && (!commandCheck(command))) {
+            if ((playerCommand) && (!commandCheck(command)) && (!playerCheck(playerName))) {
                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
             }
-            if ((checkNotifyListCMD(command)) && (logNotifyCommands)) {
+            if ((checkNotifyListCMD(command)) && (logNotifyCommands) && (!playerCheck(playerName))) {
                 scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
             }
-            if ((checkNotifyListCMD(command)) && (inGameNotifications)) {
+            if ((checkNotifyListCMD(command)) && (inGameNotifications) && (!playerCheck(playerName))) {
                 notifyPlayer(prefix + playerName + "&f: " + commandLine);
             }
         } catch (ObjectMappingException | IOException e) {
@@ -131,7 +131,7 @@ public class Main {
         }
     }
 
-    public void processInformationJoin(String playerName, int x, int y, int z, String worldName, String date) throws IOException {
+    public void processInformationJoin(String playerName, int x, int y, int z, String worldName, String date) throws IOException, ObjectMappingException {
         boolean globalLogin = config().globalLogin;
         boolean playerLogin = config().playerLogin;
 
@@ -139,15 +139,15 @@ public class Main {
         String log = "logged in.";
         String[] content = formatLog(playerName, log, x, y, z, worldName, date);
 
-        if (globalLogin) {
+        if (globalLogin && (!playerCheck(playerName))) {
             scheduler.createTaskBuilder().execute(new WriteFile(content, getChatFile())).async().name("mmclogger-A-globalLogin").submit(this);
         }
-        if (playerLogin) {
+        if (playerLogin && (!playerCheck(playerName))) {
             scheduler.createTaskBuilder().execute(new WriteFile(content, playerFile)).async().name("mmclogger-A-playerLogin").submit(this);
         }
     }
 
-    public void processInformationQuit(String playerName, int x, int y, int z, String worldName, String date) throws IOException {
+    public void processInformationQuit(String playerName, int x, int y, int z, String worldName, String date) throws IOException, ObjectMappingException {
         boolean globalLogin = config().globalLogin;
         boolean playerLogin = config().playerLogin;
 
@@ -155,16 +155,28 @@ public class Main {
         String log = "logged out.";
         String[] content = formatLog(playerName, log, x, y, z, worldName, date);
 
-        if (globalLogin) {
+        if (globalLogin && (!playerCheck(playerName))) {
             scheduler.createTaskBuilder().execute(new WriteFile(content, getChatFile())).async().name("mmclogger-A-globalLogin").submit(this);
         }
-        if (playerLogin) {
+        if (playerLogin && (!playerCheck(playerName))) {
             scheduler.createTaskBuilder().execute(new WriteFile(content, playerFile)).async().name("mmclogger-A-playerLogin").submit(this);
         }
     }
 
     private boolean commandCheck(String blacklist) throws ObjectMappingException {
         List<String> blacklists = config().BlackList;
+        String[] blacklistsplit = blacklist.split(" ");
+        String blacklistconvert = blacklistsplit[0];
+        for (String blacklist1 : blacklists) {
+            if (blacklistconvert.matches(blacklist1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean playerCheck(String blacklist) throws ObjectMappingException {
+        List<String> blacklists = config().playerBlacklist;
         String[] blacklistsplit = blacklist.split(" ");
         String blacklistconvert = blacklistsplit[0];
         for (String blacklist1 : blacklists) {

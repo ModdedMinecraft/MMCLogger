@@ -9,6 +9,7 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Config {
@@ -47,6 +48,7 @@ public class Config {
     public boolean playerLogin;
     public boolean globalLogin;
     public String logFormat;
+    public List<String> playerBlacklist;
 
     private static ConfigurationLoader<CommentedConfigurationNode> loader;
     private static CommentedConfigurationNode config;
@@ -68,6 +70,7 @@ public class Config {
         BlackList =  checkList(config.getNode("log", "command-log", "blacklist"), BlackListString, "what commands do you not want to be logged in any file?").getList(TypeToken.of(String.class));
         commandNotifyList =  checkList(config.getNode("log", "notifications", "commands"), commandNotifyListString, "what commands do you want to be notified of when they are sent?").getList(TypeToken.of(String.class));
         chatNotifyList =  checkList(config.getNode("log", "notifications", "chat"), chatNotifyListString, "What words do you want to be notified of when they are said?").getList(TypeToken.of(String.class));
+        playerBlacklist =  check(config.getNode("log", "player", "blacklist"), Collections.EMPTY_LIST, "What players do you not want to be logged?").getList(TypeToken.of(String.class));
 
         globalCommands =  check(config.getNode("log", "toggle", "global-commands"), true, "Log all command interactions to the main command files").getBoolean();
         globalChat =  check(config.getNode("log", "toggle", "global-chat"), true, "Log all chat interactions to the main chat files").getBoolean();

@@ -1,5 +1,6 @@
 package net.moddedminecraft.mmclogger;
 
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.command.SendCommandEvent;
@@ -55,7 +56,7 @@ public class EventListener {
     }
 
     @Listener
-    public void onPlayerLogin(ClientConnectionEvent.Join event, @Root Player player) throws IOException {
+    public void onPlayerLogin(ClientConnectionEvent.Join event, @Root Player player) throws IOException, ObjectMappingException {
         String name = player.getName();
         Location<World> location = player.getLocation();
         int xLocation = location.getBlockX();
@@ -69,7 +70,7 @@ public class EventListener {
     }
 
     @Listener
-    public void onPlayerDisconnect(ClientConnectionEvent.Disconnect event, @Root Player player) throws IOException {
+    public void onPlayerDisconnect(ClientConnectionEvent.Disconnect event, @Root Player player) throws IOException, ObjectMappingException {
         String name = player.getName();
         Location<World> location = player.getLocation();
         int xLocation = location.getBlockX();
