@@ -1,7 +1,5 @@
 language: java
 
-java:
-    - 1.8
-    
 script:
+    - jdk_switcher use oraclejdk8
     - mvn test
