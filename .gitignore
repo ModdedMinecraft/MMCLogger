@@ -28,4 +28,3 @@ buildNumber.properties
 /out/
 /.idea/
 *.iml
-pom.xml
