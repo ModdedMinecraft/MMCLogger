@@ -4,4 +4,4 @@ jdk:
  - oraclejdk8
  
 script:
-    - mvn -B -f pom.xml clean package
+    - mvn package
