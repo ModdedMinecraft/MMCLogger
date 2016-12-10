@@ -38,6 +38,9 @@ public class Main {
     public Path defaultConf;
 
     @Inject
+    private Metrics metrics;
+
+    @Inject
     @DefaultConfig(sharedRoot = false)
     public File defaultConfFile;
 
