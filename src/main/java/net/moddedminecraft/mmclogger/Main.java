@@ -23,7 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.0", authors = {"Leelawd93"})
+@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.3", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
