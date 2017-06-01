@@ -47,8 +47,6 @@ public class Main {
 
     private Config config;
 
-    public String prefix = "&9[&6MMCLogger&9] &6";
-
     File chatlogFolder = new File(configDir, "chatlogs/logs");
     File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
     File playersFolder = new File(configDir, "chatlogs/players");
@@ -76,7 +74,7 @@ public class Main {
     @Listener
     public void onPluginReload(GameReloadEvent event, @Root Player player) throws IOException, ObjectMappingException {
         this.config = new Config(this);
-        Util.sendMessage(player, prefix + "Config Reloaded");
+        Util.sendMessage(player, config.prefix + "&6Config Reloaded");
     }
 
     void processInformation(Player player, String playerName, String chat, int x, int y, int z, String worldName, String date) {
@@ -99,7 +97,7 @@ public class Main {
                 scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, message, x, y, z, worldName, date), notifyChatFile)).async().name("mmclogger-A-NotifyChatLog").submit(this);
             }
             if ((checkNotifyListPlayer(message)) && (inGameNotifications) && (!playerCheck(playerName))) {
-                notifyPlayer(prefix + playerName + "&f: " + message);
+                notifyPlayer(config.prefix + playerName + "&f: " + message);
             }
         } catch (ObjectMappingException | IOException e) {
             e.printStackTrace();
@@ -127,7 +125,7 @@ public class Main {
                 scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
             }
             if ((checkNotifyListCMD(command)) && (inGameNotifications) && (!playerCheck(playerName))) {
-                notifyPlayer(prefix + playerName + "&f: " + commandLine);
+                notifyPlayer(config.prefix + playerName + "&f: " + commandLine);
             }
         } catch (ObjectMappingException | IOException e) {
             e.printStackTrace();

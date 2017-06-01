@@ -16,6 +16,8 @@ public class Config {
 
     private static Main plugin;
 
+    public String prefix = "&9[&6MMCLogger&9] ";
+
     private String[] BlackListString = {
             "help",
             "who",
@@ -66,6 +68,8 @@ public class Config {
         if (!plugin.defaultConfFile.exists()) {
             plugin.defaultConfFile.createNewFile();
         }
+
+        prefix = check(config.getNode("chat-prefix"), prefix, "Prefix for chat messages sent by this plugin.").getString();
 
         BlackList =  checkList(config.getNode("log", "command-log", "blacklist"), BlackListString, "what commands do you not want to be logged in any file?").getList(TypeToken.of(String.class));
         commandNotifyList =  checkList(config.getNode("log", "notifications", "commands"), commandNotifyListString, "what commands do you want to be notified of when they are sent?").getList(TypeToken.of(String.class));
@@ -119,7 +123,7 @@ public class Config {
         }
     }
 
-    static void checkPlayer(String name) throws IOException {
+    public static void checkPlayer(String name) throws IOException {
         File file = new File(plugin.playersFolder, name + ".log");
         if (!file.exists()) {
             file.createNewFile();
