@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.4", authors = {"Leelawd93"})
+@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.5", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
