@@ -49,6 +49,7 @@ public class Config {
     public boolean logNotifyCommands;
     public boolean playerLogin;
     public boolean globalLogin;
+    public boolean disableFalsePositives;
     public String logFormat;
     public List<String> playerBlacklist;
 
@@ -86,6 +87,8 @@ public class Config {
         playerLogin =  check(config.getNode("log", "toggle", "player-login"), true, "Log all player logins to the players own file.").getBoolean();
         globalLogin =  check(config.getNode("log", "toggle", "global-login"), true, "Log all player logins to the main log file.").getBoolean();
         logFormat =  check(config.getNode("log", "log-format"), "[%date] %name: %content", "The format of which the logs should be written. Formatting: %date, %world, %x, %y, %z, %name, %content").getString();
+
+        disableFalsePositives =  check(config.getNode("log", "command-log", "disable-false-positives"), true, "If true, Any command will be checked to see if it is a registered command. (EG: '/help' is valid, '/heelp' might not be), If false, everything will be logged unless it is blacklisted").getBoolean();
 
         loader.save(config);
 
