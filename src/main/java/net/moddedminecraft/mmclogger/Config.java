@@ -50,6 +50,8 @@ public class Config {
     public boolean playerLogin;
     public boolean globalLogin;
     public boolean disableFalsePositives;
+    public boolean isWhitelist;
+    public boolean checkForAliases;
     public String logFormat;
     public List<String> playerBlacklist;
 
@@ -89,6 +91,8 @@ public class Config {
         logFormat =  check(config.getNode("log", "log-format"), "[%date] %name: %content", "The format of which the logs should be written. Formatting: %date, %world, %x, %y, %z, %name, %content").getString();
 
         disableFalsePositives =  check(config.getNode("log", "command-log", "disable-false-positives"), true, "If true, Any command will be checked to see if it is a registered command. (EG: '/help' is valid, '/heelp' might not be), If false, everything will be logged unless it is blacklisted").getBoolean();
+        isWhitelist =  check(config.getNode("log", "command-log", "use-as-whitelist"), false, "If true, The blacklist will be treated as a whitelist and will only log the commands requested").getBoolean();
+        checkForAliases =  check(config.getNode("log", "command-log", "check-for-aliases"), false, "If true, Commands in the blacklist will be checked to see if they have any aliases and blacklist those aswell.").getBoolean();
 
         loader.save(config);
 
