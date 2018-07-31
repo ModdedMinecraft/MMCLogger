@@ -125,16 +125,16 @@ public class Main {
         if (config().disableFalsePositives) {
             if (commands.stream().anyMatch(command.toLowerCase()::equals) && !command.equalsIgnoreCase("sponge:callback")) {
                 try {
-                    if ((globalCommand) && (!commandCheck(command)) && (!playerCheck(playerName))) {
+                    if (globalCommand && !commandCheck(command) && !playerCheck(playerName)) {
                         scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
                     }
-                    if ((playerCommand) && (!commandCheck(command)) && (!playerCheck(playerName))) {
+                    if (playerCommand && !commandCheck(command) && !playerCheck(playerName)) {
                         scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
                     }
-                    if ((checkNotifyListCMD(command)) && (logNotifyCommands) && (!playerCheck(playerName))) {
+                    if (checkNotifyListCMD(command) && logNotifyCommands && !playerCheck(playerName)) {
                         scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
                     }
-                    if ((checkNotifyListCMD(command)) && (inGameNotifications) && (!playerCheck(playerName))) {
+                    if (checkNotifyListCMD(command) && inGameNotifications && !playerCheck(playerName)) {
                         notifyPlayer(config.prefix + playerName + "&f: " + commandLine);
                     }
                 } catch (ObjectMappingException | IOException e) {
@@ -144,16 +144,16 @@ public class Main {
         } else {
             if (!command.equalsIgnoreCase("sponge:callback")) {
                 try {
-                    if ((globalCommand) && (!commandCheck(command)) && (!playerCheck(playerName))) {
+                    if (globalCommand && !commandCheck(command) && !playerCheck(playerName)) {
                         scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
                     }
-                    if ((playerCommand) && (!commandCheck(command)) && (!playerCheck(playerName))) {
+                    if (playerCommand && !commandCheck(command) && !playerCheck(playerName)) {
                         scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
                     }
-                    if ((checkNotifyListCMD(command)) && (logNotifyCommands) && (!playerCheck(playerName))) {
+                    if (checkNotifyListCMD(command) && logNotifyCommands && !playerCheck(playerName)) {
                         scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
                     }
-                    if ((checkNotifyListCMD(command)) && (inGameNotifications) && (!playerCheck(playerName))) {
+                    if (checkNotifyListCMD(command) && inGameNotifications && !playerCheck(playerName)) {
                         notifyPlayer(config.prefix + playerName + "&f: " + commandLine);
                     }
                 } catch (ObjectMappingException | IOException e) {
