@@ -22,10 +22,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Plugin(id = "mmclogger", name = "MMCLogger", version = "1.5", authors = {"Leelawd93"})
@@ -120,16 +117,57 @@ public class Main {
         String commandLine = "/" + command + " " + args;
 
         Optional<? extends CommandMapping> optionalCommandMapping = Sponge.getCommandManager().get(command, player);
-        Set<String> commands = optionalCommandMapping.map(commandMapping -> commandMapping.getAllAliases().stream().map(String::toLowerCase).collect(Collectors.toSet())).orElseGet(() -> Sets.newHashSet("invalid"));
+        Set<String> commands = optionalCommandMapping.map(commandMapping -> commandMapping.getAllAliases().stream().map(String::toLowerCase).collect(Collectors.toSet())).orElseGet(() -> Sets.newHashSet("....."));
 
-        if (config().disableFalsePositives) {
-            if (commands.stream().anyMatch(command.toLowerCase()::equals) && !command.equalsIgnoreCase("sponge:callback")) {
-                try {
-                    if (globalCommand && !commandCheck(command) && !playerCheck(playerName)) {
-                        scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+        if (command.equalsIgnoreCase("sponge:callback")) {
+            return;
+        }
+
+        if (config().isWhitelist) {
+            if (config().disableFalsePositives) {
+                if (commands.stream().anyMatch(command.toLowerCase()::equals)) {
+                    try {
+                        if (config().checkForAliases) {
+                            if (globalCommand && commandCheck(commands) && !playerCheck(playerName)) {
+                                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+                            }
+                            if (playerCommand && commandCheck(commands) && !playerCheck(playerName)) {
+                                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                            }
+                        } else {
+                            if (globalCommand && commandCheck(command) && !playerCheck(playerName)) {
+                                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+                            }
+                            if (playerCommand && commandCheck(command) && !playerCheck(playerName)) {
+                                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                            }
+                        }
+                        if (checkNotifyListCMD(command) && logNotifyCommands && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
+                        }
+                        if (checkNotifyListCMD(command) && inGameNotifications && !playerCheck(playerName)) {
+                            notifyPlayer(config.prefix + playerName + "&f: " + commandLine);
+                        }
+                    } catch (ObjectMappingException | IOException e) {
+                        e.printStackTrace();
                     }
-                    if (playerCommand && !commandCheck(command) && !playerCheck(playerName)) {
-                        scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                }
+            } else {
+                try {
+                    if (config().checkForAliases) {
+                        if (globalCommand && commandCheck(commands) && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+                        }
+                        if (playerCommand && commandCheck(commands) && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                        }
+                    } else {
+                        if (globalCommand && commandCheck(command) && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+                        }
+                        if (playerCommand && commandCheck(command) && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                        }
                     }
                     if (checkNotifyListCMD(command) && logNotifyCommands && !playerCheck(playerName)) {
                         scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
@@ -142,13 +180,50 @@ public class Main {
                 }
             }
         } else {
-            if (!command.equalsIgnoreCase("sponge:callback")) {
-                try {
-                    if (globalCommand && !commandCheck(command) && !playerCheck(playerName)) {
-                        scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+            if (config().disableFalsePositives) {
+                if (commands.stream().anyMatch(command.toLowerCase()::equals)) {
+                    try {
+                        if (config().checkForAliases) {
+                            if (globalCommand && !commandCheck(commands) && !playerCheck(playerName)) {
+                                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+                            }
+                            if (playerCommand && !commandCheck(commands) && !playerCheck(playerName)) {
+                                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                            }
+                        } else {
+                            if (globalCommand && !commandCheck(command) && !playerCheck(playerName)) {
+                                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+                            }
+                            if (playerCommand && !commandCheck(command) && !playerCheck(playerName)) {
+                                scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                            }
+                        }
+                        if (checkNotifyListCMD(command) && logNotifyCommands && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
+                        }
+                        if (checkNotifyListCMD(command) && inGameNotifications && !playerCheck(playerName)) {
+                            notifyPlayer(config.prefix + playerName + "&f: " + commandLine);
+                        }
+                    } catch (ObjectMappingException | IOException e) {
+                        e.printStackTrace();
                     }
-                    if (playerCommand && !commandCheck(command) && !playerCheck(playerName)) {
-                        scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                }
+            } else {
+                try {
+                    if (config().checkForAliases) {
+                        if (globalCommand && !commandCheck(commands) && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+                        }
+                        if (playerCommand && !commandCheck(commands) && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                        }
+                    } else {
+                        if (globalCommand && !commandCheck(command) && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), getCmdFile())).async().name("mmclogger-A-GlobalCommandLog").submit(this);
+                        }
+                        if (playerCommand && !commandCheck(command) && !playerCheck(playerName)) {
+                            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-PlayerCommandLog").submit(this);
+                        }
                     }
                     if (checkNotifyListCMD(command) && logNotifyCommands && !playerCheck(playerName)) {
                         scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), notifyCommandFile)).async().name("mmclogger-A-NotifyCommandLog").submit(this);
@@ -195,16 +270,21 @@ public class Main {
         }
     }
 
-    private boolean commandCheck(String blacklist) throws ObjectMappingException {
+    private boolean commandCheck(String command) throws ObjectMappingException {
         List<String> blacklists = config().BlackList;
-        String[] blacklistsplit = blacklist.split(" ");
-        String blacklistconvert = blacklistsplit[0];
+        String[] commandsplit = command.split(" ");
+        String commandconvert = commandsplit[0];
         for (String blacklist1 : blacklists) {
-            if (blacklistconvert.matches(blacklist1)) {
+            if (commandconvert.matches(blacklist1)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean commandCheck(Set<String> commands) throws ObjectMappingException {
+        List<String> blacklists = config().BlackList;
+        return !Collections.disjoint(commands, blacklists);
     }
 
     private boolean playerCheck(String blacklist) throws ObjectMappingException {
