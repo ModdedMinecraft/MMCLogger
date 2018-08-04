@@ -25,7 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.5", authors = {"Leelawd93"})
+@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.6", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
