@@ -3,6 +3,7 @@ package net.moddedminecraft.mmclogger;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import org.bstats.sponge.Metrics2;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandMapping;
@@ -25,7 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.6", authors = {"Leelawd93"})
+@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.6.1", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -40,7 +41,7 @@ public class Main {
     public Path defaultConf;
 
     @Inject
-    private Metrics metrics;
+    private Metrics2 metrics;
 
     @Inject
     @DefaultConfig(sharedRoot = false)
@@ -49,7 +50,7 @@ public class Main {
 
     private Config config;
 
-    File chatlogFolder = new File(configDir, "chatlogs/logs");
+    File chatlogFolder = new File("chatlogs/logs");
     File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
     File playersFolder = new File(configDir, "chatlogs/players");
 
