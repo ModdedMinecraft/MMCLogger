@@ -3,7 +3,6 @@ package net.moddedminecraft.mmclogger;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import org.bstats.sponge.Metrics2;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandManager;
@@ -44,9 +43,6 @@ public class Main {
     @Inject
     @DefaultConfig(sharedRoot = false)
     public Path defaultConf;
-
-    @Inject
-    private Metrics2 metrics;
 
     @Inject
     @DefaultConfig(sharedRoot = false)
