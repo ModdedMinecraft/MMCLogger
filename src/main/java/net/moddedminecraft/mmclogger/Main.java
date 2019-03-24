@@ -6,7 +6,10 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.bstats.sponge.Metrics2;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.CommandManager;
 import org.spongepowered.api.command.CommandMapping;
+import org.spongepowered.api.command.args.GenericArguments;
+import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.entity.living.player.Player;
@@ -17,6 +20,8 @@ import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.Scheduler;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.serializer.TextSerializers;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,9 +52,9 @@ public class Main {
     @DefaultConfig(sharedRoot = false)
     public File defaultConfFile;
 
-
     private Config config;
 
+    File rootFolder= new File("chatlogs/");;
     File chatlogFolder = new File("chatlogs/logs");
     File commandlogFolder = new File(configDir, "chatlogs/commandlogs");
     File playersFolder = new File(configDir, "chatlogs/players");
@@ -62,10 +67,20 @@ public class Main {
 
     private Scheduler scheduler = Sponge.getScheduler();
 
+    private CommandManager cmdManager = Sponge.getCommandManager();
+
     @Listener
     public void onInitialization(GameInitializationEvent e) throws IOException, ObjectMappingException {
         Sponge.getEventManager().registerListeners(this, new EventListener(this));
         this.config = new Config(this);
+
+        CommandSpec viewLog = CommandSpec.builder()
+                .description(Text.of("View chat logs"))
+                .executor(new ViewLogCommand(this))
+                .arguments(GenericArguments.optional(GenericArguments.player(Text.of("player"))))
+                .permission("mmclogger.viewlogs")
+                .build();
+        cmdManager.register(this, viewLog, "viewchatlogs", "vcl");
         //scheduler.createTaskBuilder().execute(this::checkDate).interval(1, TimeUnit.SECONDS).name("mmclogger-S-DateChecker").submit(this);
     }
 
@@ -394,4 +409,13 @@ public class Main {
             }
         }
     }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public Text fromLegacy(String legacy) {
+        return TextSerializers.FORMATTING_CODE.deserializeUnchecked(legacy);
+    }
+
 }

@@ -27,6 +27,7 @@ repositories {
 dependencies {
     compileOnly group: 'org.spongepowered', name: 'spongeapi', version:'7.1.0-SNAPSHOT'
     compile group: 'org.bstats', name: 'bstats-sponge', version:'1.4'
+    compile group: 'org.json', name: 'json', version: '20180813'
 }
 
 shadowJar {
