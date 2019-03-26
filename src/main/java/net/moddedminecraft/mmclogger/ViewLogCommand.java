@@ -8,7 +8,7 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
-import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -31,7 +31,7 @@ public class ViewLogCommand implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        Optional<Player> playerOp = args.<Player>getOne("player");
+        Optional<User> playerOp = args.<User>getOne("player");
         PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
         java.util.List<Text> contents = new ArrayList<>();
         String folderDir = plugin.rootFolder.getName();

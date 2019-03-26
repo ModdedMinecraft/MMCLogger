@@ -73,7 +73,7 @@ public class Main {
         CommandSpec viewLog = CommandSpec.builder()
                 .description(Text.of("View chat logs"))
                 .executor(new ViewLogCommand(this))
-                .arguments(GenericArguments.optional(GenericArguments.player(Text.of("player"))))
+                .arguments(GenericArguments.optional(GenericArguments.user(Text.of("player"))))
                 .permission("mmclogger.viewlogs")
                 .build();
         cmdManager.register(this, viewLog, "viewchatlogs", "vcl");
