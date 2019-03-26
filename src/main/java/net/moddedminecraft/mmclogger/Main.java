@@ -30,7 +30,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.7.0", authors = {"Leelawd93"})
+@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.7.1", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
