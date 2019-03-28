@@ -112,29 +112,31 @@ public class ViewLogCommand implements CommandExecutor {
                 connection.setDoInput(true);
                 connection.setDoOutput(true);
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-                
-                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                List<String> fileList = Files.readAllLines(file.toPath(), getCharSet());
-                StringBuilder sb = new StringBuilder();
-                int numLines = fileList.size();
-                if (numLines > 6000) {
-                    numLines = 6000;
-                }
-                List<String> lastLines = fileList.subList(fileList.size()-numLines, fileList.size());
-                for (String line : lastLines) {
-                    sb.append(line);
-                    sb.append("\n");
-                }
-                wr.writeBytes(sb.toString());
-                wr.flush();
-                wr.close();
 
-                BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
-                String inputLine;
+                try(DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                    List<String> fileList = Files.readAllLines(file.toPath(), getCharSet());
+                    StringBuilder sb = new StringBuilder();
+                    int numLines = fileList.size();
+                    if (numLines > 6000) {
+                        numLines = 6000;
+                    }
+                    List<String> lastLines = fileList.subList(fileList.size() - numLines, fileList.size());
+                    for (String line : lastLines) {
+                        sb.append(line);
+                        sb.append("\n");
+                    }
+                    wr.write(sb.toString().getBytes(getCharSet()));
+                    wr.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 StringBuilder response = new StringBuilder();
-
-                while ((inputLine = rd.readLine()) != null) response.append(inputLine);
-                rd.close();
+                try (BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+                    String inputLine;
+                    while ((inputLine = rd.readLine()) != null) response.append(inputLine);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 JsonElement json = new JsonParser().parse(response.toString());
                 if (!json.isJsonObject()) {
