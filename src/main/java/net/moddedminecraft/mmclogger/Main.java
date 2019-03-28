@@ -13,7 +13,6 @@ import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
@@ -86,9 +85,9 @@ public class Main {
     }
 
     @Listener
-    public void onPluginReload(GameReloadEvent event, @Root Player player) throws IOException, ObjectMappingException {
+    public void onPluginReload(GameReloadEvent event) throws IOException, ObjectMappingException {
         this.config = new Config(this);
-        Util.sendMessage(player, config.prefix + "&6Config Reloaded");
+        logger.info("MMCLogger Config Reloaded");
     }
 
     void processInformation(Player player, String playerName, String chat, int x, int y, int z, String worldName, String date) {
