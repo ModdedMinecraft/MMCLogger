@@ -16,6 +16,7 @@ import org.spongepowered.api.text.action.TextActions;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -113,7 +114,7 @@ public class ViewLogCommand implements CommandExecutor {
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
                 
                 DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                List<String> fileList = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+                List<String> fileList = Files.readAllLines(file.toPath(), getCharSet());
                 StringBuilder sb = new StringBuilder();
                 int numLines = fileList.size();
                 if (numLines > 6000) {
@@ -155,5 +156,16 @@ public class ViewLogCommand implements CommandExecutor {
                 }
             }
         }).name("mmclogger-async-gethaste").async().submit(plugin);
+    }
+
+    private Charset getCharSet() {
+        switch(plugin.config().vclCharset) {
+            case "ISO-8859-1":
+                return StandardCharsets.ISO_8859_1;
+            case "UTF-8":
+                return StandardCharsets.UTF_8;
+            default:
+                return StandardCharsets.UTF_8;
+        }
     }
 }
