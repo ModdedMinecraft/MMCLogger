@@ -103,7 +103,7 @@ public class ViewLogCommand implements CommandExecutor {
         };
     }
 
-    public void getHaste(File file, CommandSource src) {
+    private void getHaste(File file, CommandSource src) {
         Sponge.getScheduler().createTaskBuilder().execute(() -> {
             HttpURLConnection connection = null;
             try {
