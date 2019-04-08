@@ -18,6 +18,10 @@ public class Config {
 
     public String prefix = "&9[&6MMCLogger&9] ";
 
+    private String[] commandToChatLogString = {
+            "cmd1",
+            "cmd2",
+    };
     private String[] BlackListString = {
             "help",
             "who",
@@ -37,6 +41,7 @@ public class Config {
             "duplicate",
             "duplication"};
 
+    public List<String> commandToChatLog;
     public List<String> BlackList;
     public List<String> commandNotifyList;
     public List<String> chatNotifyList;
@@ -75,6 +80,8 @@ public class Config {
         }
 
         prefix = check(config.getNode("chat-prefix"), prefix, "Prefix for chat messages sent by this plugin.").getString();
+
+        commandToChatLog =  checkList(config.getNode("log", "command-log", "filter-to-chatlog"), commandToChatLogString, "Some commands you might want as chat log messages instead, EG: /reply, This will filter these commands into the chatlog file instead").getList(TypeToken.of(String.class));
 
         BlackList =  checkList(config.getNode("log", "command-log", "blacklist"), BlackListString, "what commands do you not want to be logged in any file?").getList(TypeToken.of(String.class));
         commandNotifyList =  checkList(config.getNode("log", "notifications", "commands"), commandNotifyListString, "what commands do you want to be notified of when they are sent?").getList(TypeToken.of(String.class));

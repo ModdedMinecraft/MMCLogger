@@ -12,6 +12,7 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.io.IOException;
+import java.util.List;
 
 public class EventListener {
     private Main plugin;
@@ -51,7 +52,14 @@ public class EventListener {
         String world = location.getExtent().getName();
         String date = plugin.getDate();
         Config.checkPlayer(name);
-
+        List<String> commandToChatLog = plugin.config().commandToChatLog;
+        for (String cmd : commandToChatLog) {
+            if (command.equalsIgnoreCase(cmd)) {
+                String commandLine = "/" + command + " " + arguments;
+                plugin.processInformation(player, name, commandLine, xLocation, yLocation, zLocation, world, date);
+                return;
+            }
+        }
         plugin.processCMDInformation(player, name, command, arguments, xLocation, yLocation, zLocation, world, date);
     }
 
