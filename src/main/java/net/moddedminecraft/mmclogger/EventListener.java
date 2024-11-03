@@ -1,6 +1,7 @@
 package net.moddedminecraft.mmclogger;
 
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.command.SendCommandEvent;
@@ -37,7 +38,7 @@ public class EventListener {
             e.printStackTrace();
         }
 
-        plugin.processInformation(player, name, message, xLocation, yLocation, zLocation, world, date);
+        plugin.processInformation(name, message, xLocation, yLocation, zLocation, world, date);
     }
 
     @Listener
@@ -56,11 +57,31 @@ public class EventListener {
         for (String cmd : commandToChatLog) {
             if (command.equalsIgnoreCase(cmd)) {
                 String commandLine = "/" + command + " " + arguments;
-                plugin.processInformation(player, name, commandLine, xLocation, yLocation, zLocation, world, date);
+                plugin.processInformation(name, commandLine, xLocation, yLocation, zLocation, world, date);
                 return;
             }
         }
         plugin.processCMDInformation(player, name, command, arguments, xLocation, yLocation, zLocation, world, date);
+    }
+
+    @Listener
+    public void onConsoleCommand(SendCommandEvent event, CommandSource src) throws IOException {
+        if (src instanceof Player) {
+            return;
+        }
+        String command = event.getCommand().toLowerCase();
+        String arguments = event.getArguments();
+        String date = plugin.getDate();
+        Config.checkPlayer("Console");
+        List<String> commandToChatLog = plugin.config().commandToChatLog;
+        for (String cmd : commandToChatLog) {
+            if (command.equalsIgnoreCase(cmd)) {
+                String commandLine = "/" + command + " " + arguments;
+                plugin.processInformation("Console", commandLine, 0, 0, 0, "Console", date);
+                return;
+            }
+        }
+        plugin.processCMDInformationConsole("Console", command, arguments,  0, 0, 0, "Console", date);
     }
 
     @Listener

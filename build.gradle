@@ -6,7 +6,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'net.moddedminecraft'
-version = '1.7.3-API-7'
+version = '1.7.4-API-7'
 
 description = """MMCLogger"""
 
@@ -19,9 +19,9 @@ tasks.withType(JavaCompile) {
 
 
 repositories {
-        
-     maven { url "http://repo.spongepowered.org/maven" }
-     maven { url "http://repo.maven.apache.org/maven2" }
+
+    maven { url "https://repo-new.spongepowered.org/maven" }
+    maven { url "http://repo.maven.apache.org/maven2" }
     maven { url "https://repo.codemc.org/repository/maven-public" }
 }
 dependencies {
@@ -29,9 +29,9 @@ dependencies {
     compile group: 'org.json', name: 'json', version: '20180813'
 }
 
-shadowJar {
-    dependencies {
-        include(dependency("org.bstats:bstats-sponge:1.4"))
-    }
-    classifier = ''
-}
+//shadowJar {
+   // dependencies {
+      //  include(dependency("org.bstats:bstats-sponge:1.4"))
+    //}
+    //classifier = ''
+//}

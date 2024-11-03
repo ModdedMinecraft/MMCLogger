@@ -47,6 +47,7 @@ public class Config {
     public List<String> chatNotifyList;
     public boolean globalCommands;
     public boolean globalChat;
+    public boolean consoleCommands;
     public boolean playerCommands;
     public boolean playerChat;
     public boolean logNotifyChat;
@@ -88,10 +89,11 @@ public class Config {
         chatNotifyList =  checkList(config.getNode("log", "notifications", "chat"), chatNotifyListString, "What words do you want to be notified of when they are said?").getList(TypeToken.of(String.class));
         playerBlacklist =  check(config.getNode("log", "player", "blacklist"), Collections.EMPTY_LIST, "What players do you not want to be logged?").getList(TypeToken.of(String.class));
 
-        globalCommands =  check(config.getNode("log", "toggle", "global-commands"), true, "Log all command interactions to the main command files").getBoolean();
+        globalCommands =  check(config.getNode("log", "toggle", "global-commands"), true, "Log all player command interactions to the main command files").getBoolean();
         globalChat =  check(config.getNode("log", "toggle", "global-chat"), true, "Log all chat interactions to the main chat files").getBoolean();
         playerCommands =  check(config.getNode("log", "toggle", "player-commands"), true, "Log players commands to their own files").getBoolean();
         playerChat =  check(config.getNode("log","toggle","player-chat"), true, "Log player's chat to their own files").getBoolean();
+        consoleCommands =  check(config.getNode("log", "toggle", "console-commands"), true, "Log all console commands").getBoolean();
         logNotifyChat =  check(config.getNode("log", "toggle", "log-notify-chat"), true, "Log words specified in the notifications-chat section.").getBoolean();
         inGameNotifications =  check(config.getNode("log", "toggle", "in-game-notifications"), true, "Notify players in-game of specified words / commands").getBoolean();
         logNotifyCommands =  check(config.getNode("log", "toggle", "log-notify-commands"), true, "Log commands specified in the notifications-commands section.").getBoolean();

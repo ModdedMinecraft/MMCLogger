@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandManager;
 import org.spongepowered.api.command.CommandMapping;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.config.ConfigDir;
@@ -29,7 +30,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Plugin(id = "mmclogger", name = "MMCLogger", version = "1.7.3", authors = {"Leelawd93"})
+@Plugin(id = "mmclogger", name = "MMCLogger", description = "Chat and command logger", version = "1.7.4", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -90,7 +91,7 @@ public class Main {
         logger.info("MMCLogger Config Reloaded");
     }
 
-    void processInformation(Player player, String playerName, String chat, int x, int y, int z, String worldName, String date) {
+    void processInformation(String playerName, String chat, int x, int y, int z, String worldName, String date) {
         boolean globalChat = config().globalChat;
         boolean playerChat = config().playerChat;
         boolean logNotifyChat = config().logNotifyChat;
@@ -247,6 +248,27 @@ public class Main {
                 }
             }
         }
+    }
+
+    void processCMDInformationConsole(String playerName, String command, String args, int x, int y, int z, String worldName, String date) {
+
+        if (!config().consoleCommands) {
+            return;
+        }
+
+        File playerFile = new File(playersFolder, playerName + ".log");
+        String commandLine = "/" + command + " " + args;
+
+        if (command.equalsIgnoreCase("sponge:callback")) {
+            return;
+        }
+
+        try {
+            scheduler.createTaskBuilder().execute(new WriteFile(formatLog(playerName, commandLine, x, y, z, worldName, date), playerFile)).async().name("mmclogger-A-ConsoleCmdLog").submit(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void processInformationJoin(String playerName, int x, int y, int z, String worldName, String date) throws IOException, ObjectMappingException {
