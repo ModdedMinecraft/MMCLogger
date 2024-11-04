@@ -2,16 +2,21 @@ package net.moddedminecraft.mmclogger;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.adventure.SpongeComponents;
+import org.spongepowered.api.command.CommandCause;
+import org.spongepowered.api.command.CommandExecutor;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.command.exception.CommandException;
+import org.spongepowered.api.command.parameter.CommandContext;
+import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.pagination.PaginationService;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.action.TextActions;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -22,6 +27,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 public class ViewLogCommand implements CommandExecutor {
@@ -33,28 +40,42 @@ public class ViewLogCommand implements CommandExecutor {
     }
 
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        Optional<User> playerOp = args.<User>getOne("player");
-        PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
-        java.util.List<Text> contents = new ArrayList<>();
+    public CommandResult execute(CommandContext context) throws CommandException {
+        Parameter.Value<UUID> userParameter = Parameter.user().key("player").build();
+
+        Audience audience = context.cause().audience();
+
+        final Optional<UUID> uuid = context.one(userParameter);
+        User user = null;
+        if (uuid.isPresent()) {
+            try {
+                if (Sponge.server().userManager().load(uuid.get()).get().isPresent()) {
+                    user = Sponge.server().userManager().load(uuid.get()).get().get();
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        PaginationService paginationService = Sponge.serviceProvider().provide(PaginationService.class).get();
+        List<Component> contents = new ArrayList<>();
         String folderDir = plugin.rootFolder.getName();
         File[] files = plugin.rootFolder.listFiles();
 
-        if (playerOp.isPresent()) {
-            getHaste(new File(plugin.playersFolder + "/" + playerOp.get().getName() + ".log"), src);
+        if (user != null) {
+            getHaste(new File(plugin.playersFolder + "/" + user.name() + ".log"), context.cause());
             return CommandResult.success();
         } else {
 
             for (File file : files) {
-                Text.Builder send = Text.builder();
+                TextComponent.Builder send = Component.text();
                 if (file.isDirectory()) {
                     send.append(plugin.fromLegacy("&8[&e" + file.getName() + "&8]"));
-                    send.onClick(TextActions.executeCallback(viewDir(file)));
-                    send.onHover(TextActions.showText(plugin.fromLegacy("&eClick to view folder")));
+                    send.clickEvent(SpongeComponents.executeCallback(viewDir(file)));//TextActions.executeCallback(viewDir(file)));
+                    send.hoverEvent(HoverEvent.showText(plugin.fromLegacy("&eClick to view folder")));
                 } else {
                     send.append(plugin.fromLegacy("&e" + file.getName()));
-                    send.onClick(TextActions.executeCallback(viewFile(file)));
-                    send.onHover(TextActions.showText(plugin.fromLegacy("&eClick to view this log in hastebin")));
+                    send.clickEvent(SpongeComponents.executeCallback(viewFile(file)));
+                    send.hoverEvent(HoverEvent.showText(plugin.fromLegacy("&eClick to view this log in hastebin")));
                 }
                 contents.add(send.build());
             }
@@ -63,27 +84,27 @@ public class ViewLogCommand implements CommandExecutor {
                     .title(plugin.fromLegacy("&8[&7" + folderDir + "&8]"))
                     .contents(contents)
                     .padding(plugin.fromLegacy("&8="))
-                    .sendTo(src);
+                    .sendTo(audience);
             return CommandResult.success();
         }
     }
 
 
-    private Consumer<CommandSource> viewDir(File folder) {
+    private Consumer<CommandCause> viewDir(File folder) {
         return consumer -> {
-            PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
-            java.util.List<Text> contents = new ArrayList<>();
-            Sponge.getScheduler().createTaskBuilder().execute(() -> {
+            PaginationService paginationService = Sponge.serviceProvider().provide(PaginationService.class).get();
+            List<Component> contents = new ArrayList<>();
+            Sponge.asyncScheduler().executor(plugin.container).submit(() -> {
                 for (File file : folder.listFiles()) {
-                    Text.Builder send = Text.builder();
+                    TextComponent.Builder send = Component.text();
                     if (file.isDirectory()) {
                         send.append(plugin.fromLegacy("&8[&e" + file.getName() + "&8]"));
-                        send.onClick(TextActions.executeCallback(viewDir(file)));
-                        send.onHover(TextActions.showText(plugin.fromLegacy("&eClick to view folder")));
+                        send.clickEvent(SpongeComponents.executeCallback(viewDir(file)));
+                        send.hoverEvent(HoverEvent.showText(plugin.fromLegacy("&eClick to view folder")));
                     } else {
                         send.append(plugin.fromLegacy("&e" + file.getName()));
-                        send.onClick(TextActions.executeCallback(viewFile(file)));
-                        send.onHover(TextActions.showText(plugin.fromLegacy("&eClick to get a hastebin link for this file")));
+                        send.clickEvent(SpongeComponents.executeCallback(viewFile(file)));
+                        send.hoverEvent(HoverEvent.showText(plugin.fromLegacy("&eClick to get a hastebin link for this file")));
                     }
                     contents.add(send.build());
                 }
@@ -92,23 +113,24 @@ public class ViewLogCommand implements CommandExecutor {
                         .title(plugin.fromLegacy("&8[&7" + folder.getName() + "&8]"))
                         .contents(contents)
                         .padding(plugin.fromLegacy("&8="))
-                        .sendTo(consumer);
-            }).name("mmclogger-async-viewdir").async().submit(plugin);
+                        .sendTo(consumer.audience());
+            });
         };
     }
 
-    private Consumer<CommandSource> viewFile(File file) {
+    private Consumer<CommandCause> viewFile(File file) {
         return consumer -> {
             getHaste(file, consumer);
         };
     }
 
-    private void getHaste(File file, CommandSource src) {
-        Sponge.getScheduler().createTaskBuilder().execute(() -> {
+    private void getHaste(File file, CommandCause cause) {
+        Sponge.asyncScheduler().executor(plugin.container).submit(() -> {
             HttpURLConnection connection = null;
             try {
                 connection = (HttpURLConnection) new URL("https://hastebin.com/documents").openConnection();
                 connection.setRequestMethod("POST");
+                connection.setRequestProperty("Authorization", "Bearer 9ef20a73735144f9017859d9354af73a7d97c3ebbbfb1d72b9b4bda1b2a21d9278842404f7e1a16908b116a7fa2503777e91c5d3a317a7af45cd03133e77850d");
                 connection.setDoInput(true);
                 connection.setDoOutput(true);
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
@@ -143,21 +165,22 @@ public class ViewLogCommand implements CommandExecutor {
                     throw new IOException("Can't parse JSON");
                 }
 
-                Text.Builder send = Text.builder();
-                String url = "http://hastebin.com/" + json.getAsJsonObject().get("key").getAsString();
+                TextComponent.Builder send = Component.text();
+                String url = "http://hastebin.com/share/" + json.getAsJsonObject().get("key").getAsString();
                 send.append(plugin.fromLegacy("&3" + url));
-                send.onClick(TextActions.openUrl(new URL(url)));
-                send.onHover(TextActions.showText(plugin.fromLegacy("&eClick here to go to: &6" + url)));
-                src.sendMessage(send.build());
+                send.clickEvent(ClickEvent.openUrl(new URL(url)));
+                send.hoverEvent(HoverEvent.showText(plugin.fromLegacy("&eClick here to go to: &6" + url)));
+                cause.audience().sendMessage(send.build());
             } catch (IOException e) {
                 e.printStackTrace();
-                src.sendMessage(plugin.fromLegacy("&cThere was an error getting your hastebin"));
+                cause.audience().sendMessage(plugin.fromLegacy("&cThere was an error getting your hastebin"));
+                throw new RuntimeException(e);
             } finally {
                 if (connection != null) {
                     connection.disconnect();
                 }
             }
-        }).name("mmclogger-async-gethaste").async().submit(plugin);
+        });
     }
 
     private Charset getCharSet() {

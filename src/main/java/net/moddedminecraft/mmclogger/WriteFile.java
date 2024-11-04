@@ -1,7 +1,6 @@
 package net.moddedminecraft.mmclogger;
 
-
-import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.scheduler.TaskFuture;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -9,7 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public class WriteFile implements Consumer<Task> {
+public class WriteFile implements Consumer<TaskFuture> {
 
     private File type;
     private String[] i;
@@ -20,7 +19,7 @@ public class WriteFile implements Consumer<Task> {
     }
 
     @Override
-    public void accept(Task task) {
+    public void accept(TaskFuture task) {
         File log = this.type;
         BufferedWriter buffwriter;
         FileWriter filewriter;
@@ -34,10 +33,9 @@ public class WriteFile implements Consumer<Task> {
             }
 
             buffwriter.flush();
-            task.cancel();
+            task.isDone();
 
         }
         catch (IOException ignored) {}
-
     }
 }
