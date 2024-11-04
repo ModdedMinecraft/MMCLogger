@@ -1,23 +1,27 @@
 package net.moddedminecraft.mmclogger;
 
+import net.kyori.adventure.text.Component;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.chat.ChatTypes;
-import org.spongepowered.api.text.serializer.TextSerializers;
+import org.spongepowered.api.command.parameter.CommandContext;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import sawfowl.localeapi.api.TextUtils;
 
 public class Util {
 
-    public static void broadcastMessage(String message) {
-        Sponge.getServer().getBroadcastChannel().send(fromLegacy(message), ChatTypes.SYSTEM);
+    public void broadcastMessage(String message) {
+        Sponge.server().broadcastAudience().sendMessage(fromLegacy(message));
     }
 
-    public static void sendMessage(CommandSource sender, String message) {
+    public static void sendMessage(CommandContext sender, String message) {
+        sender.cause().audience().sendMessage(fromLegacy(message));
+    }
+
+    public static void sendMessage(ServerPlayer sender, String message) {
         sender.sendMessage(fromLegacy(message));
     }
 
-    private static Text fromLegacy(String legacy) {
-        return TextSerializers.FORMATTING_CODE.deserializeUnchecked(legacy);
+    public static Component fromLegacy(String legacy) {
+        return TextUtils.deserializeLegacy(legacy);
     }
 
 }

@@ -1,0 +1,41 @@
+{
+  "loader": {
+    "name": "java_plain",
+    "version": "1.0"
+  },
+  "license": "GPL-3.0",
+  "plugins": [
+    {
+      "id": "mmclogger",
+      "name": "MMCLogger",
+      "entrypoint": "net.moddedminecraft.mmclogger.Main",
+      "description": "A chat and command logger with combined and individual logging.",
+      "version": "2.0.0",
+      "branding": {},
+      "links": {
+        "source": "https://github.com/ModdedMinecraft/MMCLogger",
+        "issues": "https://github.com/ModdedMinecraft/MMCLogger/issues"
+      },
+      "contributors": [
+        {
+          "name": "Leelawd",
+          "description": "Lead Developer"
+        }
+      ],
+      "dependencies": [
+        {
+          "id": "localeapi",
+          "version": "2.6.0",
+          "load-order": "after",
+          "optional": false
+        },
+        {
+          "id": "spongeapi",
+          "version": "8.2.0",
+          "load-order": "after",
+          "optional": false
+        }
+      ]
+    }
+  ]
+}

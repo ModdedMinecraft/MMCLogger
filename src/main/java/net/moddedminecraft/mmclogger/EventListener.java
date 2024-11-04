@@ -1,16 +1,15 @@
 package net.moddedminecraft.mmclogger;
-
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.entity.living.player.Player;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import org.spongepowered.api.SystemSubject;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.command.SendCommandEvent;
+import org.spongepowered.api.event.command.ExecuteCommandEvent;
 import org.spongepowered.api.event.filter.cause.Root;
-import org.spongepowered.api.event.message.MessageChannelEvent;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.text.serializer.TextSerializers;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.event.message.MessageEvent;
+import org.spongepowered.api.event.message.PlayerChatEvent;
+import org.spongepowered.api.event.network.ServerSideConnectionEvent;
+import org.spongepowered.api.world.server.ServerLocation;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,40 +22,39 @@ public class EventListener {
     }
 
     @Listener
-    public void onPlayerChat(MessageChannelEvent.Chat event, @Root Player player) {
-        String name = player.getName();
-        String message = TextSerializers.FORMATTING_CODE.serialize(event.getFormatter().getBody().toText());
-        Location<World> location = player.getLocation();
-        int xLocation = location.getBlockX();
-        int yLocation = location.getBlockY();
-        int zLocation = location.getBlockZ();
-        String world = location.getExtent().getName();
+    public void onPlayerChat(MessageEvent event, @Root ServerPlayer player) {
+        String name = player.name();
+        Component message = event.message();
+        ServerLocation location = player.serverLocation();
+        double xLocation = location.x();
+        double yLocation = location.y();
+        double zLocation = location.z();
+        String world = location.world().key().value();
         String date = plugin.getDate();
         try {
             Config.checkPlayer(name);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         plugin.processInformation(name, message, xLocation, yLocation, zLocation, world, date);
     }
 
     @Listener
-    public void onPlayerCommand(SendCommandEvent event, @Root Player player) throws IOException {
-        String command = event.getCommand().toLowerCase();
-        String arguments = event.getArguments();
-        String name = player.getName();
-        Location<World> location = player.getLocation();
-        int xLocation = location.getBlockX();
-        int yLocation = location.getBlockY();
-        int zLocation = location.getBlockZ();
-        String world = location.getExtent().getName();
+    public void onPlayerCommand(ExecuteCommandEvent.Pre event, @Root ServerPlayer player) throws IOException {
+        String command = event.command().toLowerCase();
+        String arguments = event.arguments();
+        String name = player.name();
+        ServerLocation location = player.serverLocation();
+        double xLocation = location.x();
+        double yLocation = location.y();
+        double zLocation = location.z();
+        String world = location.world().key().value();
         String date = plugin.getDate();
         Config.checkPlayer(name);
         List<String> commandToChatLog = plugin.config().commandToChatLog;
         for (String cmd : commandToChatLog) {
             if (command.equalsIgnoreCase(cmd)) {
-                String commandLine = "/" + command + " " + arguments;
+                Component commandLine = Component.text("/" + command + " " + arguments);
                 plugin.processInformation(name, commandLine, xLocation, yLocation, zLocation, world, date);
                 return;
             }
@@ -65,18 +63,18 @@ public class EventListener {
     }
 
     @Listener
-    public void onConsoleCommand(SendCommandEvent event, CommandSource src) throws IOException {
-        if (src instanceof Player) {
+    public void onConsoleCommand(ExecuteCommandEvent.Pre context) throws IOException {
+        if (context.cause().root() instanceof ServerPlayer) {
             return;
         }
-        String command = event.getCommand().toLowerCase();
-        String arguments = event.getArguments();
+        String command = context.command().toLowerCase();
+        String arguments = context.arguments();
         String date = plugin.getDate();
         Config.checkPlayer("Console");
         List<String> commandToChatLog = plugin.config().commandToChatLog;
         for (String cmd : commandToChatLog) {
             if (command.equalsIgnoreCase(cmd)) {
-                String commandLine = "/" + command + " " + arguments;
+                Component commandLine = Component.text("/" + command + " " + arguments);
                 plugin.processInformation("Console", commandLine, 0, 0, 0, "Console", date);
                 return;
             }
@@ -85,13 +83,14 @@ public class EventListener {
     }
 
     @Listener
-    public void onPlayerLogin(ClientConnectionEvent.Join event, @Root Player player) throws IOException, ObjectMappingException {
-        String name = player.getName();
-        Location<World> location = player.getLocation();
-        int xLocation = location.getBlockX();
-        int yLocation = location.getBlockY();
-        int zLocation = location.getBlockZ();
-        String world = location.getExtent().getName();
+    public void onPlayerLogin(ServerSideConnectionEvent.Join event) throws IOException {
+        ServerPlayer player = event.player();
+        String name = player.name();
+        ServerLocation location = player.serverLocation();
+        double xLocation = location.x();
+        double yLocation = location.y();
+        double zLocation = location.z();
+        String world = location.world().key().value();
         String date = plugin.getDate();
         Config.checkPlayer(name);
 
@@ -99,13 +98,14 @@ public class EventListener {
     }
 
     @Listener
-    public void onPlayerDisconnect(ClientConnectionEvent.Disconnect event, @Root Player player) throws IOException, ObjectMappingException {
-        String name = player.getName();
-        Location<World> location = player.getLocation();
-        int xLocation = location.getBlockX();
-        int yLocation = location.getBlockY();
-        int zLocation = location.getBlockZ();
-        String world = location.getExtent().getName();
+    public void onPlayerDisconnect(ServerSideConnectionEvent.Disconnect event) throws IOException {
+        ServerPlayer player = event.player();
+        String name = player.name();
+        ServerLocation location = player.serverLocation();
+        double xLocation = location.x();
+        double yLocation = location.y();
+        double zLocation = location.z();
+        String world = location.world().key().value();
         String date = plugin.getDate();
         Config.checkPlayer(name);
 

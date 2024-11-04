@@ -6,8 +6,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'net.moddedminecraft'
-version = '1.7.4-API-7'
-
+version = '2.0.0-API-8'
 description = """MMCLogger"""
 
 sourceCompatibility = 1.8
@@ -19,19 +18,20 @@ tasks.withType(JavaCompile) {
 
 
 repositories {
-
-    maven { url "https://repo-new.spongepowered.org/maven" }
-    maven { url "http://repo.maven.apache.org/maven2" }
-    maven { url "https://repo.codemc.org/repository/maven-public" }
+    mavenCentral()
+    maven {
+        name = "Sponge"
+        url = "https://repo.spongepowered.org/repository/maven-public"
+    }
+    maven {
+        name = "JitPack"
+        url 'https://jitpack.io'
+    }
 }
-dependencies {
-    compileOnly group: 'org.spongepowered', name: 'spongeapi', version:'7.1.0-SNAPSHOT'
-    compile group: 'org.json', name: 'json', version: '20180813'
-}
 
-//shadowJar {
-   // dependencies {
-      //  include(dependency("org.bstats:bstats-sponge:1.4"))
-    //}
-    //classifier = ''
-//}
+}
+    dependencies {
+    compile group: 'org.json', name: 'json', version: '20231013'
+    compileOnly(files("libs/LocaleAPI-2.6.0-S8.0.0-RELEASE.jar"))
+    compileOnly group: 'org.spongepowered', name: 'spongeapi', version:'8.2.0'
+}
